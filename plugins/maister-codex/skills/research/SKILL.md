@@ -1,5 +1,5 @@
 ---
-name: maister-research
+name: research
 description: Orchestrates comprehensive research workflows from question definition through findings documentation. Handles technical, requirements, literature, and mixed research types with adaptive methodology, multi-source gathering, pattern synthesis, and evidence-based reporting. Supports standalone research tasks and embedded research phase in other workflows.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -248,7 +250,7 @@ This phase executes 4 sequential steps. On resume, check existing artifacts to s
 **Artifacts**: `planning/research-plan.md`, `planning/sources.md`
 **Resume check**: If `planning/research-plan.md` AND `planning/sources.md` exist, skip to Step 3
 
-**INVOKE NOW**: Use Dispatch Maister agent with `subagent_type: maister-research-planner`
+**INVOKE NOW**: Use Dispatch Maister agent with `subagent_type: maister:research-planner`
 
 **Context to pass**: task_path, research_brief_path, research_type, research_question, scope, project_doc_paths (from state), methodology_reference (absolute path to `references/research-methodologies.md`)
 
@@ -279,7 +281,7 @@ For each category in strategy:
 **Artifacts**: `analysis/synthesis.md`, `outputs/research-report.md`
 **Resume check**: If `analysis/synthesis.md` AND `outputs/research-report.md` exist, skip (Phase 1 complete)
 
-**INVOKE NOW**: Use Dispatch Maister agent with `subagent_type: maister-research-synthesizer`
+**INVOKE NOW**: Use Dispatch Maister agent with `subagent_type: maister:research-synthesizer`
 
 **Context to pass**: task_path, findings_directory_path, research_question, research_type, methodology, html_style_guide_path (for the research-report.html companion)
 
@@ -347,7 +349,7 @@ Maister user decision - "Research foundation complete (initialized, planned, gat
 
 > **ANTI-PATTERN**: Do NOT generate solution alternatives inline. The solution-brainstormer agent has specialized multi-perspective analysis capabilities.
 
-**INVOKE NOW**: Use Dispatch Maister agent with `subagent_type: maister-solution-brainstormer`
+**INVOKE NOW**: Use Dispatch Maister agent with `subagent_type: maister:solution-brainstormer`
 
 **Context to pass** (Pattern 7):
 - `task_path`, `synthesis_path`, `research_report_path`
@@ -425,7 +427,7 @@ Maister user decision - "Brainstorming complete. Continue to high-level design?"
 
 > **ANTI-PATTERN**: Do NOT generate C4 architecture diagrams or ADRs inline. The solution-designer agent has specialized architecture and MADR documentation capabilities.
 
-**INVOKE NOW**: Use Dispatch Maister agent with `subagent_type: maister-solution-designer`
+**INVOKE NOW**: Use Dispatch Maister agent with `subagent_type: maister:solution-designer`
 
 **Context to pass** (Pattern 7):
 - `task_path`, `synthesis_path`, `research_report_path`
@@ -469,7 +471,7 @@ Maister user decision - "Design complete. Continue to output generation?"
 3. If design artifacts exist, suggest starting development in a fresh session:
    ```
    To start development based on this research, clear context first or start a new session, then run:
-   $maister-codex:maister-development [task-path]
+   $maister:development [task-path]
    ```
 
 → End of workflow
@@ -573,7 +575,7 @@ orchestrator:
 
 ### As Standalone Research
 
-**Command**: `$maister-codex:maister-research [research-question]`
+**Command**: `$maister:research [research-question]`
 **Flow**: Complete all phases, save outputs in task directory
 
 ### As Embedded Research Phase
@@ -601,8 +603,8 @@ research_outputs:
 ## Command Integration
 
 Invoked via:
-- `$maister-codex:maister-research [question] [--type=TYPE] [--brainstorm] [--no-brainstorm] [--design] [--no-design]` (new)
-- `$maister-codex:maister-research [task-path] [--from=PHASE]` (resume)
+- `$maister:research [question] [--type=TYPE] [--brainstorm] [--no-brainstorm] [--design] [--no-design]` (new)
+- `$maister:research [task-path] [--from=PHASE]` (resume)
 
 **Brainstorming flags**:
 - `--brainstorm`: Force brainstorming phase (auto-resolves Phase 2 brainstorming decision to "enable")

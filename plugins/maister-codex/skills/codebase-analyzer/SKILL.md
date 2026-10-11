@@ -1,5 +1,5 @@
 ---
-name: maister-codebase-analyzer
+name: codebase-analyzer
 description: Analyzes codebase using adaptive parallel Explore subagents based on task complexity. Selects agent roles from a pool, launches Explore agents, then delegates report generation to codebase-analysis-reporter subagent.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -202,7 +204,7 @@ After all Explore agents complete, delegate to `codebase-analysis-reporter` suba
 
 ```
 Dispatch Maister agent:
-  subagent_type: "maister-codebase-analysis-reporter"
+  subagent_type: "maister:codebase-analysis-reporter"
   description: "Merge findings into analysis report"
   prompt: |
     You are the codebase-analysis-reporter. Merge these raw findings into a structured analysis report.

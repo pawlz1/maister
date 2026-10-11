@@ -1,5 +1,5 @@
 ---
-name: maister-reviews-reality-check
+name: reviews-reality-check
 description: Comprehensive reality assessment of completed work to verify it actually works and is production-ready
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -103,7 +105,7 @@ complete protection against arbitrary shell code. Keep runtime sandboxing.
 
 ---
 
-**ACTION REQUIRED**: This command delegates to a different skill. The `<command-name>` tag refers to THIS command, not the target. Call the Dispatch Maister agent with subagent_type="maister-reality-assessor" NOW. Pass the task path in the prompt. Do not read files, explore code, or execute workflow steps yourself.
+**ACTION REQUIRED**: This command delegates to a different skill. The `<command-name>` tag refers to THIS command, not the target. Call the Dispatch Maister agent with subagent_type="maister:reality-assessor" NOW. Pass the task path in the prompt. Do not read files, explore code, or execute workflow steps yourself.
 
 You are running a comprehensive reality check using the `reality-assessor` agent.
 
@@ -125,7 +127,7 @@ You are performing no-nonsense reality assessment to determine if completed work
 
 ```
 Task Tool:
-- subagent_type: "maister-reality-assessor"
+- subagent_type: "maister:reality-assessor"
 - description: Reality assessment
 - prompt: |
     Assess completion reality for task: [task-path]
@@ -148,12 +150,12 @@ The reality-assessor agent will:
 
 **Example 1**: Reality check before deployment
 ```
-User: $maister-codex:maister-reviews-reality-check .maister/tasks/development/2025-11-17-payment-processing/
+User: $maister:reviews-reality-check .maister/tasks/development/2025-11-17-payment-processing/
 ```
 
 **Example 2**: Verify claimed completion
 ```
-User: $maister-codex:maister-reviews-reality-check .maister/tasks/development/2025-11-17-login-timeout/
+User: $maister:reviews-reality-check .maister/tasks/development/2025-11-17-login-timeout/
 ```
 
 ## What to Expect

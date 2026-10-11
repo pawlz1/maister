@@ -98,7 +98,7 @@ def main():
                 return 2
             env = dict(os.environ, CODEX_HOME=home)
             for command in (['plugin', 'marketplace', 'add', str(ROOT)],
-                            ['plugin', 'add', 'maister-codex@maister-codex-plugins', '--json']):
+                            ['plugin', 'add', 'maister@maister-codex-plugins', '--json']):
                 subprocess.run([args.codex] + command, env=env, check=True,
                                capture_output=True, text=True, timeout=30)
             with Client([args.codex, 'app-server', '--stdio'], home,
@@ -106,7 +106,7 @@ def main():
                 client.initialize()
                 skills = client.request('skills/list', {'cwds': [str(workspace)], 'forceReload': True})
                 role, prompt = SCENARIOS[args.scenario]
-                name = 'maister-codex:maister-' + role
+                name = 'maister:' + role
                 skill = next(s for entry in skills['data'] for s in entry['skills'] if s['name'] == name)
                 started = client.request('thread/start', {
                     'cwd': str(workspace), 'model': args.model,

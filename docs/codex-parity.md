@@ -116,8 +116,9 @@ isolated CODEX_HOME for installation/parser tests.
   metadata and CLI operations.
 - Actual Codex CLI installs the package into an isolated CODEX_HOME. Its
   app-server `skills/list` discovers all 23 namespaced entry points without skill
-  loading errors. Confirmed syntax includes
-  `$maister-codex:maister-development`.
+  loading errors. The discovered name `maister:development` corresponds to the
+  documented `$maister:development` invocation. Discovery does not establish
+  model-driven execution or interactive-terminal acceptance.
 - Existing `make validate` passes. CI checks adapter tests and generated-tree
   drift on Linux/macOS and rebuilds the Copilot variant for regression coverage.
 - Native custom roles are not assumed to be registered from a plugin. Dispatch

@@ -1,5 +1,5 @@
 ---
-name: maister-reviews-code
+name: reviews-code
 description: Run automated code quality, security, and performance analysis on your code
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -131,7 +133,7 @@ You are performing automated code analysis to identify quality, security, and pe
 
 ```
 Use Dispatch Maister agent:
-  subagent_type: "maister-code-reviewer"
+  subagent_type: "maister:code-reviewer"
   description: "Code quality review"
   prompt: |
     Analyze code at: [path from user or from Maister user decision]
@@ -152,17 +154,17 @@ The code-reviewer subagent will:
 
 **Example 1**: Review specific task
 ```
-User: $maister-codex:maister-reviews-code .maister/tasks/development/2025-10-24-auth/
+User: $maister:reviews-code .maister/tasks/development/2025-10-24-auth/
 ```
 
 **Example 2**: Review with specific scope
 ```
-User: $maister-codex:maister-reviews-code src/api/ --scope=security
+User: $maister:reviews-code src/api/ --scope=security
 ```
 
 **Example 3**: Review entire project
 ```
-User: $maister-codex:maister-reviews-code src/
+User: $maister:reviews-code src/
 ```
 
 ## What to Expect

@@ -1,5 +1,5 @@
 ---
-name: maister-init
+name: init
 description: Initialize Maister framework with intelligent project analysis and documentation generation
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -107,7 +109,7 @@ complete protection against arbitrary shell code. Keep runtime sandboxing.
 
 Initialize `.maister/docs/` with intelligent project analysis and meaningful documentation generation based on actual codebase inspection.
 
-**NOTE**: This skill invokes other skills and subagents at specific phases. Use the **Dispatch Maister agent with `docs-operator` subagent** (subagent_type: `maister-docs-operator`) for all docs-manager operations, and **Dispatch Maister agent** for project-analyzer. Use the **Load Maister skill** only for standards-discover (Phase 8, last phase). The Dispatch Maister agent returns control to this skill after completion; the Load Maister skill does not.
+**NOTE**: This skill invokes other skills and subagents at specific phases. Use the **Dispatch Maister agent with `docs-operator` subagent** (subagent_type: `maister:docs-operator`) for all docs-manager operations, and **Dispatch Maister agent** for project-analyzer. Use the **Load Maister skill** only for standards-discover (Phase 8, last phase). The Dispatch Maister agent returns control to this skill after completion; the Load Maister skill does not.
 
 ## Phase Configuration
 
@@ -208,7 +210,7 @@ Store selection for Phase 5.
 
 ## PHASE 5: Initialize Documentation Structure
 
-**Invoke `docs-operator` subagent** via Dispatch Maister agent (subagent_type: `maister-docs-operator`) with prompt:
+**Invoke `docs-operator` subagent** via Dispatch Maister agent (subagent_type: `maister:docs-operator`) with prompt:
 
 > "Initialize documentation structure. Standards selection: [array from Phase 4]. [If --standards-from was provided: Standards source path: [resolved path]/.maister/docs/standards/. Copy standards from this external path instead of built-in defaults.] Only copy selected standard categories. Do NOT copy project templates — only create the project/ directory. Project documentation will be generated in Phase 6 with real content from project analysis. Create placeholder sections in INDEX.md for skipped categories."
 
@@ -226,7 +228,7 @@ Wait for docs-operator to complete, then immediately proceed to Phase 6.
 html_output: true
 
 # mockup_format — how UI mockups are rendered when a workflow generates them
-# (development Phase 4, product-design Phase 7, or $maister-codex:maister-mockup-studio).
+# (development Phase 4, product-design Phase 7, or $maister:mockup-studio).
 #   html  (default): rendered HTML/CSS via the visual companion (browser preview, saved as .html).
 #   ascii          : terminal ASCII mockups via the ascii-mockup-generator agent (no Node/browser needed).
 # Auto-falls back to ascii when Node.js is unavailable. Default: html.
@@ -256,7 +258,7 @@ Write each file to `.maister/docs/project/`.
 
 ## PHASE 7: Validate
 
-**Step 1**: Invoke `docs-operator` subagent via Dispatch Maister agent (subagent_type: `maister-docs-operator`) with prompt:
+**Step 1**: Invoke `docs-operator` subagent via Dispatch Maister agent (subagent_type: `maister:docs-operator`) with prompt:
 
 > "Regenerate INDEX.md to include all newly created project documentation. Then verify AGENTS.md is properly integrated with .maister/docs/ documentation."
 
@@ -270,7 +272,7 @@ Wait for docs-operator to complete, then immediately continue with Step 2.
 - Next steps:
   1. Review generated documentation
   2. Customize for your team
-  3. Start development with `$maister-codex:maister-work`
+  3. Start development with `$maister:work`
   4. Keep documentation current
 
 ---

@@ -1,5 +1,5 @@
 ---
-name: maister-reviews-pragmatic
+name: reviews-pragmatic
 description: Run pragmatic code review to detect over-engineering and ensure code matches project scale
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -103,7 +105,7 @@ complete protection against arbitrary shell code. Keep runtime sandboxing.
 
 ---
 
-**ACTION REQUIRED**: This command delegates to a different skill. The `<command-name>` tag refers to THIS command, not the target. Call the Dispatch Maister agent with subagent_type="maister-code-quality-pragmatist" NOW. Pass the path to analyze in the prompt. Do not read files, explore code, or execute workflow steps yourself.
+**ACTION REQUIRED**: This command delegates to a different skill. The `<command-name>` tag refers to THIS command, not the target. Call the Dispatch Maister agent with subagent_type="maister:code-quality-pragmatist" NOW. Pass the path to analyze in the prompt. Do not read files, explore code, or execute workflow steps yourself.
 
 You are running a pragmatic code review using the `code-quality-pragmatist` agent.
 
@@ -125,7 +127,7 @@ You are performing pragmatic analysis to identify over-engineering, unnecessary 
 
 ```
 Task Tool:
-- subagent_type: "maister-code-quality-pragmatist"
+- subagent_type: "maister:code-quality-pragmatist"
 - description: Pragmatic code review
 - prompt: |
     Review the code at: [path]
@@ -148,17 +150,17 @@ The code-quality-pragmatist agent will:
 
 **Example 1**: Review specific feature
 ```
-User: $maister-codex:maister-reviews-pragmatic .maister/tasks/development/2025-11-17-user-management/
+User: $maister:reviews-pragmatic .maister/tasks/development/2025-11-17-user-management/
 ```
 
 **Example 2**: Review source directory
 ```
-User: $maister-codex:maister-reviews-pragmatic src/features/payments/
+User: $maister:reviews-pragmatic src/features/payments/
 ```
 
 **Example 3**: Review specific file
 ```
-User: $maister-codex:maister-reviews-pragmatic src/services/cache-service.ts
+User: $maister:reviews-pragmatic src/services/cache-service.ts
 ```
 
 ## What to Expect

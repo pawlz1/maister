@@ -1,5 +1,5 @@
 ---
-name: maister-mockup-studio
+name: mockup-studio
 description: Generates UI mockups (rendered HTML/CSS via a browser visual companion, or terminal ASCII). Discovers and binds to the project's frontend/UI/UX resources (standards, design system, available design skills). Invoked standalone by users, or by the development and product-design orchestrators as their mockup-generation step.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -110,7 +112,7 @@ The single, reusable engine for generating UI mockups in the maister plugin. It 
 Two ways it runs:
 
 - **Invoked by an orchestrator** (development Phase 4, product-design Phase 7) via the Load Maister skill, with explicit parameters (see Input Parameters). The orchestrator owns its own phase gate; mockup-studio does the generation.
-- **Invoked standalone by a user** (`$maister-codex:maister-mockup-studio "<screen or feature>"`). It creates its own task directory and runs the full interactive flow.
+- **Invoked standalone by a user** (`$maister:mockup-studio "<screen or feature>"`). It creates its own task directory and runs the full interactive flow.
 
 Whatever the caller, the work is the same: discover the project's design language → render mockups in the chosen format → persist them → (optionally) index them for downstream binding.
 
@@ -188,7 +190,7 @@ Read `references/visual-companion.md` for the full protocol. Then:
 
 ### Step 4b — ASCII path
 
-**INVOKE** the `maister-ascii-mockup-generator` subagent (Dispatch Maister agent). Pass: `task_path`, `output_subdir` target, the `context` grounding, the feature type, AND the discovered design resources (resolved standard file paths, design-system inventory, skill hints) so the agent binds to them. The agent writes ASCII to `analysis/design-context/ascii/ui-mockups.md` (or `<output_subdir>/ascii-mockups.md` for standalone/product-design) and can append INDEX rows itself.
+**INVOKE** the `maister:ascii-mockup-generator` subagent (Dispatch Maister agent). Pass: `task_path`, `output_subdir` target, the `context` grounding, the feature type, AND the discovered design resources (resolved standard file paths, design-system inventory, skill hints) so the agent binds to them. The agent writes ASCII to `analysis/design-context/ascii/ui-mockups.md` (or `<output_subdir>/ascii-mockups.md` for standalone/product-design) and can append INDEX rows itself.
 
 ### Step 5 — Refinement loop
 
@@ -219,7 +221,7 @@ Read `references/visual-companion.md` for the full protocol. Then:
 
 ## Standalone Mode
 
-When a user runs `$maister-codex:maister-mockup-studio "<screen or feature>"` (no `task_path` from an orchestrator):
+When a user runs `$maister:mockup-studio "<screen or feature>"` (no `task_path` from an orchestrator):
 
 1. Capture the clock; create `.maister/tasks/mockups/YYYY-MM-DD-<short-name>/` with an `analysis/` subdir.
 2. Defaults: `output_subdir = analysis/mockups`, `iteration = full`, `emit_index_rows = false`, `format` from `.maister/config.yml` `mockup_format` (default `html`).

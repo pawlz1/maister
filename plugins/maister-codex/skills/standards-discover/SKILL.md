@@ -1,5 +1,5 @@
 ---
-name: maister-standards-discover
+name: standards-discover
 description: Discover coding standards from project configuration files, code patterns, documentation, and external sources (PRs, CI/CD)
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -166,7 +168,7 @@ Custom scope values are matched against existing `.maister/docs/standards/*/` di
 ### Phase 1: Planning & Initialization
 
 1. **Parse options** from command arguments
-2. **Check prerequisites**: Verify `.maister/docs/` exists. If not, offer to run `$maister-codex:maister-init` first
+2. **Check prerequisites**: Verify `.maister/docs/` exists. If not, offer to run `$maister:init` first
 3. **Read existing standards** from `.maister/docs/INDEX.md` to identify updates vs creates and avoid duplicates
 4. **Display discovery plan** showing scope, sources, and estimated time
 5. **Get user confirmation** via Maister user decision before proceeding
@@ -260,7 +262,7 @@ If `--auto-apply` is set, automatically approve findings with confidence >= 90% 
 Write standard files through the docs-operator subagent rather than Write/Edit, so INDEX.md and AGENTS.md stay consistent with the files.
 
 1. **Prepare content** for every approved standard — standard name, description, examples (preferred/avoid), rationale from evidence, source citations. Format each as a `###` heading with a 1-10 line description (excluding code snippets); group related standards into one topic file; add brief code examples only where they clarify. Note create vs update for each target file.
-2. **Invoke the `docs-operator` subagent once** via Dispatch Maister agent (subagent_type: `maister-docs-operator`) with all prepared standards, instructing it to apply each create/update (merging updates with existing content), then regenerate INDEX.md and confirm AGENTS.md references the standards directory.
+2. **Invoke the `docs-operator` subagent once** via Dispatch Maister agent (subagent_type: `maister:docs-operator`) with all prepared standards, instructing it to apply each create/update (merging updates with existing content), then regenerate INDEX.md and confirm AGENTS.md references the standards directory.
 
 Display application summary: created count, updated count, total active.
 
@@ -280,7 +282,7 @@ Display final results:
 
 | Situation | Strategy |
 |-----------|----------|
-| `.maister/docs/` missing | Offer `$maister-codex:maister-init`, abort if declined |
+| `.maister/docs/` missing | Offer `$maister:init`, abort if declined |
 | gh CLI unavailable | Skip PR analysis, continue with other sources |
 | GitHub API rate limit | Skip PR analysis, note in report |
 | Config file parse error | Skip that file, log warning, continue |
@@ -304,17 +306,17 @@ Display final results:
 
 ```bash
 # Full discovery (default)
-$maister-codex:maister-standards-discover
+$maister:standards-discover
 
 # Quick scan (config files only, ~30-60s)
-$maister-codex:maister-standards-discover --scope=quick
+$maister:standards-discover --scope=quick
 
 # Frontend standards only
-$maister-codex:maister-standards-discover --scope=frontend
+$maister:standards-discover --scope=frontend
 
 # High confidence, auto-apply
-$maister-codex:maister-standards-discover --confidence=80 --auto-apply
+$maister:standards-discover --confidence=80 --auto-apply
 
 # Skip external analysis (offline/no GitHub)
-$maister-codex:maister-standards-discover --skip-external
+$maister:standards-discover --skip-external
 ```

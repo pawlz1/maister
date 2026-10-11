@@ -1,5 +1,5 @@
 ---
-name: maister-work
+name: work
 description: Unified entry point — auto-classifies tasks and routes to appropriate workflow. ALWAYS execute when invoked via slash command.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -155,11 +157,11 @@ Auto-classifies tasks and routes to the appropriate workflow orchestrator. Suppo
 
 | Classification | Routes To (Skill) |
 |----------------|-------------------|
-| development | `maister-development` |
-| performance | `maister-performance` |
-| migration | `maister-migration` |
-| research | `maister-research` |
-| product-design | `maister-product-design` |
+| development | `maister:development` |
+| performance | `maister:performance` |
+| migration | `maister:migration` |
+| research | `maister:research` |
+| product-design | `maister:product-design` |
 
 ---
 
@@ -235,14 +237,14 @@ Options:
 
 ```
 Use Load Maister skill:
-  skill: "maister-[orchestrator-name]"
+  skill: "maister:[orchestrator-name]"
   args: "[task_path] [flags]"
 ```
 
 Examples:
-- Resume development: `skill: "maister-development"` with `args: ".maister/tasks/development/2025-10-23-fix"`
-- Restart from phase: `skill: "maister-development"` with `args: ".maister/tasks/development/2025-10-26-auth --from=verify"`
-- Fresh attempts: `skill: "maister-migration"` with `args: ".maister/tasks/migrations/2025-10-20-redux --reset-attempts"`
+- Resume development: `skill: "maister:development"` with `args: ".maister/tasks/development/2025-10-23-fix"`
+- Restart from phase: `skill: "maister:development"` with `args: ".maister/tasks/development/2025-10-26-auth --from=verify"`
+- Fresh attempts: `skill: "maister:migration"` with `args: ".maister/tasks/migrations/2025-10-20-redux --reset-attempts"`
 
 ### Step 3: Classify & Route New Task
 
@@ -252,7 +254,7 @@ Examples:
 
 ```
 Use Dispatch Maister agent:
-  subagent_type: "maister-task-classifier"
+  subagent_type: "maister:task-classifier"
   description: "Classify task type"
   prompt: "Classify this task into a workflow type: [task description].
            Return structured YAML classification result."
@@ -282,14 +284,14 @@ Display:
   Routing to [task_type] workflow...
 
 Use Load Maister skill:
-  skill: "maister-[orchestrator-name]"
+  skill: "maister:[orchestrator-name]"
   args: "[description]"
 ```
 
 **Routing examples:**
-- development (92%): `skill: "maister-development"` with `args: "Fix login timeout error"`
-- development (88%): `skill: "maister-development"` with `args: "Add filtering to user table"`
-- performance (95%): `skill: "maister-performance"` with `args: "Optimize slow dashboard queries"`
+- development (92%): `skill: "maister:development"` with `args: "Fix login timeout error"`
+- development (88%): `skill: "maister:development"` with `args: "Add filtering to user table"`
+- performance (95%): `skill: "maister:performance"` with `args: "Optimize slow dashboard queries"`
 
 ---
 
@@ -319,7 +321,7 @@ Display:
 "Task cancelled. You can:
 - Run /work again when ready
 - Use specific workflow commands directly:
-  $maister-codex:maister-development, $maister-codex:maister-performance, etc."
+  $maister:development, $maister:performance, etc."
 ```
 
 ---
@@ -328,11 +330,11 @@ Display:
 
 | Workflow Type | Skill | Args |
 |---------------|-------|------|
-| development | `maister-development` | `[path] [--from=PHASE] [--reset-attempts]` |
-| performance | `maister-performance` | `[path] [--from=PHASE]` |
-| migration | `maister-migration` | `[path] [--from=PHASE]` |
-| research | `maister-research` | `[path] [--from=PHASE]` |
-| product-design | `maister-product-design` | `[path] [--from=PHASE]` |
+| development | `maister:development` | `[path] [--from=PHASE] [--reset-attempts]` |
+| performance | `maister:performance` | `[path] [--from=PHASE]` |
+| migration | `maister:migration` | `[path] [--from=PHASE]` |
+| research | `maister:research` | `[path] [--from=PHASE]` |
+| product-design | `maister:product-design` | `[path] [--from=PHASE]` |
 
 ---
 

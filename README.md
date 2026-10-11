@@ -41,15 +41,15 @@ acceptance requirement. Install from the development fork in your terminal:
 
 ```bash
 codex plugin marketplace add pawlz1/maister --ref add-codex
-codex plugin add maister-codex@maister-codex-plugins
+codex plugin add maister@maister-codex-plugins
 ```
 
 Review and trust the bundled hooks, then start `codex` in your project. In the
 Codex chat, initialize and start a workflow:
 
 ```text
-$maister-codex:maister-init
-$maister-codex:maister-development Add a user profile page with avatar upload
+$maister:init
+$maister:development Add a user profile page with avatar upload
 ```
 
 See the [Codex CLI installation and usage guide](platforms/codex/README.md) for

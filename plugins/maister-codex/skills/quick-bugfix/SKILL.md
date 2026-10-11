@@ -1,5 +1,5 @@
 ---
-name: maister-quick-bugfix
+name: quick-bugfix
 description: Quick bug fix with TDD red/green gates and complexity escalation
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -107,24 +109,24 @@ complete protection against arbitrary shell code. Keep runtime sandboxing.
 
 Lightweight TDD-driven bug fix workflow with planning mode. Analyze the bug, present a fix plan for approval, then reproduce with a failing test, fix, and verify. No orchestrator state, no task directory, no subagents.
 
-For complex bugs that grow beyond a quick fix, suggests escalating to the full development workflow (`$maister-codex:maister-development`).
+For complex bugs that grow beyond a quick fix, suggests escalating to the full development workflow (`$maister:development`).
 
 ## Usage
 
 ```bash
-$maister-codex:maister-quick-bugfix "Login form submits twice on slow connections"
-$maister-codex:maister-quick-bugfix "API returns 500 when email contains special characters"
-$maister-codex:maister-quick-bugfix "Dark mode toggle doesn't persist after refresh"
+$maister:quick-bugfix "Login form submits twice on slow connections"
+$maister:quick-bugfix "API returns 500 when email contains special characters"
+$maister:quick-bugfix "Dark mode toggle doesn't persist after refresh"
 ```
 
 ## When to Use
 
-**Use `$maister-codex:maister-quick-bugfix` when:**
+**Use `$maister:quick-bugfix` when:**
 - Bug is reasonably scoped and reproducible
 - You have a clear description of expected vs actual behavior
 - Fix likely touches a small number of files
 
-**Use `$maister-codex:maister-development` instead when:**
+**Use `$maister:development` instead when:**
 - Bug requires architectural changes
 - Multiple subsystems are involved
 - You need formal specification and planning
@@ -152,7 +154,7 @@ Discover the project's standards as part of analysis and planning (Steps 3–4),
 - **Then read the specific standard files it points to that match the bug area** (e.g. API bug → api + error-handling standards; form bug → validation + frontend standards; query bug → database + backend standards). Reading INDEX.md alone is NOT sufficient — this is mandatory.
 - Apply the matched standards in the fix plan (Step 4) and during implementation (Step 6).
 
-If `.maister/docs/INDEX.md` does not exist, note it and suggest `$maister-codex:maister-init` in the completion summary.
+If `.maister/docs/INDEX.md` does not exist, note it and suggest `$maister:init` in the completion summary.
 
 ### Step 3: Analyze & Assess Complexity
 
@@ -176,7 +178,7 @@ Use Maister user decision:
 - Question: "This bug appears more complex than a quick fix — [describe why]. How would you like to proceed?"
 - Options:
   1. "Continue with quick fix" — proceed, accepting the complexity
-  2. "Switch to full development workflow" — stop here and suggest running `$maister-codex:maister-development` with the bug description and analysis context
+  2. "Switch to full development workflow" — stop here and suggest running `$maister:development` with the bug description and analysis context
 
 **If no escalation needed or user chooses to continue:** proceed to Step 4.
 
@@ -205,7 +207,7 @@ Standards context from Step 2 and analysis from Step 3 MUST inform the plan.
 ## Applicable Standards
 
 [List each standard file read, with key guidelines extracted from each.
-If no standards exist: "No Maister standards found. Consider running `$maister-codex:maister-init`."]
+If no standards exist: "No Maister standards found. Consider running `$maister:init`."]
 
 ## Standards Compliance Checklist
 
@@ -260,7 +262,7 @@ If any section is missing, add it before calling Maister plan approval.
 
 **If still failing after 3 attempts:**
 - Stop and present findings to the user
-- Suggest escalating to `$maister-codex:maister-development` for a more thorough approach
+- Suggest escalating to `$maister:development` for a more thorough approach
 
 ### Step 7: Summary
 
@@ -284,6 +286,6 @@ If any section is missing, add it before calling Maister plan approval.
 Proceed with the bug fix normally, then note:
 
 ```
-"No Maister standards found. Consider running `$maister-codex:maister-init` to initialize
+"No Maister standards found. Consider running `$maister:init` to initialize
 project documentation and coding standards for better consistency."
 ```

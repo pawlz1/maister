@@ -1,5 +1,5 @@
 ---
-name: maister-implementation-verifier
+name: implementation-verifier
 description: Verify completed implementations for quality assurance. Delegates all verification work to specialized subagents - completeness checking, test execution, code review, pragmatic review, production readiness, and reality assessment. Compiles results into comprehensive verification report. Read-only verification - reports issues but does not fix them. Use after implementation is complete and before code review/commit.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -204,7 +206,7 @@ All analysis is delegated: tests → test-suite-runner; plan/standards/docs comp
 **Why sequential**: Test-suite-runner and reality-assessor both run tests. Running them in parallel causes conflicts. Test-suite-runner runs first and writes results to a file that reality-assessor reads.
 
 Dispatch Maister agent call (if NOT skip_test_suite):
-- subagent_type: `maister-test-suite-runner`
+- subagent_type: `maister:test-suite-runner`
 - description: `Run full test suite`
 - prompt: Include task_path, task_description, test_command (if known). The subagent runs ALL tests, analyzes results, and writes results to `verification/test-suite-results.md`.
 
@@ -217,27 +219,27 @@ Dispatch Maister agent call (if NOT skip_test_suite):
 **INVOKE NOW** — send ALL remaining enabled subagents in a SINGLE message (up to 5 parallel Dispatch Maister agent calls):
 
 Dispatch Maister agent call (always):
-- subagent_type: `maister-implementation-completeness-checker`
+- subagent_type: `maister:implementation-completeness-checker`
 - description: `Check implementation completeness`
 - prompt: Include task_path, report_path (`[task_path]/verification/completeness-report.md`). The subagent checks plan completion, standards compliance, and documentation completeness.
 
 Dispatch Maister agent call (if code_review_enabled):
-- subagent_type: `maister-code-reviewer`
+- subagent_type: `maister:code-reviewer`
 - description: `Code quality review`
 - prompt: Include task_path, scope (from code_review_scope or "all"), report_path (`[task_path]/verification/code-review-report.md`)
 
 Dispatch Maister agent call (if pragmatic_review_enabled):
-- subagent_type: `maister-code-quality-pragmatist`
+- subagent_type: `maister:code-quality-pragmatist`
 - description: `Pragmatic code review`
 - prompt: Include task_path, report_path (`[task_path]/verification/pragmatic-review.md`)
 
 Dispatch Maister agent call (if production_check_enabled):
-- subagent_type: `maister-production-readiness-checker`
+- subagent_type: `maister:production-readiness-checker`
 - description: `Production readiness check`
 - prompt: Include task_path, target (production), report_path (`[task_path]/verification/production-readiness-report.md`)
 
 Dispatch Maister agent call (if reality_check_enabled):
-- subagent_type: `maister-reality-assessor`
+- subagent_type: `maister:reality-assessor`
 - description: `Reality assessment`
 - prompt: Include task_path, report_path (`[task_path]/verification/reality-check.md`).
   - **If test-suite-runner ran (Step 3a)**: Include `skip_test_execution: true` and path to `verification/test-suite-results.md`. Reality-assessor should read test results from that file instead of running tests.

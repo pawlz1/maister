@@ -1,5 +1,5 @@
 ---
-name: maister-product-design
+name: product-design
 description: Interactive product/feature design orchestrator. Transforms fuzzy ideas into structured product briefs through collaborative exploration, iterative refinement, and visual prototyping. Adaptive phases detect design complexity and adjust depth.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -170,7 +172,7 @@ Cross-cutting rules from `orchestrator-patterns.md` (same as the development and
 
 1. **Artifact Summary Contract (§ 7)**: every artifact opens with TL;DR / Key Decisions / Open Questions / Risks (the writer heading is `## Open Questions / Risks`). This applies to subagent prompts (solution-brainstormer, information-gatherer already comply) AND to the artifacts this orchestrator writes directly (`problem-statement.md`, `personas.md`, `design-decisions.md`, `feature-spec.md`, `outputs/product-brief.md`). At context extraction, lift `decisions`, `risks`, and `artifacts` into `phase_summaries.[phase]` — verbatim, never re-summarized.
 2. **Dashboard upkeep (§ 8)**: rewrite `dashboard-data.js` at every phase START (mark `in_progress` before executing), **BEFORE firing every exit gate** (register the finished phase's artifacts/summary/decisions/risks — the operator reviews them on the dashboard while answering; status stays `in_progress` until the gate passes), after every phase completion (including skipped phases 3/7, with reason), every gate decision, after each refinement-loop iteration that changes an artifact, and at finalization. Every rewrite starts with `date -u` (one call per turn). Register Phase 7 mockups as artifacts (`analysis/mockups/{slug}.html` — they ARE html; set both `path` and `html` to the mockup path).
-3. **HTML companions (§ 9) — delegated, because this orchestrator writes its hero artifacts INLINE** (no producing subagent to attach a companion to). Right after each hero md is finalized, invoke the `maister-html-companion-writer` subagent (Dispatch Maister agent) to write its sibling `.html`: `analysis/design-decisions.md` (Phase 5), `analysis/feature-spec.md` (Phase 6), `outputs/product-brief.md` (Phase 8, after final approval). Pass `md_path`, `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`), `artifact_label`, and `report_suite` (the sibling reports that exist, hrefs relative to the md's directory, for the breadcrumb). Register the returned `html_path` in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first. Companion generation never blocks — on `status: failed` keep the md and continue. (`analysis/alternatives.md` already gets a companion from the solution-brainstormer subagent in Phase 4; `problem-statement.md`/`personas.md` are secondary — companion them too if cheap, but the three hero artifacts are the priority.)
+3. **HTML companions (§ 9) — delegated, because this orchestrator writes its hero artifacts INLINE** (no producing subagent to attach a companion to). Right after each hero md is finalized, invoke the `maister:html-companion-writer` subagent (Dispatch Maister agent) to write its sibling `.html`: `analysis/design-decisions.md` (Phase 5), `analysis/feature-spec.md` (Phase 6), `outputs/product-brief.md` (Phase 8, after final approval). Pass `md_path`, `html_style_guide_path` (absolute path to `../orchestrator-framework/references/html-report-style.md`), `artifact_label`, and `report_suite` (the sibling reports that exist, hrefs relative to the md's directory, for the breadcrumb). Register the returned `html_path` in `phase_summaries.[phase].artifacts[].html` so the dashboard hero cards link HTML first. Companion generation never blocks — on `status: failed` keep the md and continue. (`analysis/alternatives.md` already gets a companion from the solution-brainstormer subagent in Phase 4; `problem-statement.md`/`personas.md` are secondary — companion them too if cheap, but the three hero artifacts are the priority.)
 4. **icon_hint values** per phase: 0 `analysis`, 1 `analysis`, 2 `analysis`, 3 `analysis`, 4 `plan`, 5 `plan`, 6 `spec`, 7 `code`, 8 `done`.
 5. **State writes (§ 4 Write Rule)**: update `orchestrator-state.yml` key by key in place, validate it with a re-read after every write, and stop with `Maister user decision` on a malformed file — never continue on a state file the operator tooling cannot read.
 
@@ -180,7 +182,7 @@ Cross-cutting rules from `orchestrator-patterns.md` (same as the development and
 
 Use for **product and feature design**: defining what to build before building it. Greenfield products, new features, enhancements, API designs, workflow designs.
 
-**DO NOT use for**: Implementation tasks (use `$maister-codex:maister-development`), pure research (use `$maister-codex:maister-research`), bug fixes, performance optimization, migrations.
+**DO NOT use for**: Implementation tasks (use `$maister:development`), pure research (use `$maister:research`), bug fixes, performance optimization, migrations.
 
 **When to use this vs development orchestrator**: If you need to explore the problem space, evaluate alternatives, and define requirements interactively before any code is written, use this. If you already know what to build and need to plan and execute, use development.
 
@@ -193,7 +195,7 @@ Use for **product and feature design**: defining what to build before building i
 | `references/characteristic-detection.md` | Phase 0 (before detecting characteristics) | Detection signals, phase activation matrix, adaptive depth scaling |
 | `references/interaction-patterns.md` | Phase 2 (before first interactive phase) | Cognitive modes, refinement loop pattern, Maister user decision option design |
 
-> Phase 7 (Visual Prototyping) delegates to the `maister-mockup-studio` skill, which owns the visual companion server and its reference docs (`skills/mockup-studio/references/visual-companion.md`, `design-resource-discovery.md`).
+> Phase 7 (Visual Prototyping) delegates to the `maister:mockup-studio` skill, which owns the visual companion server and its reference docs (`skills/mockup-studio/references/visual-companion.md`, `design-resource-discovery.md`).
 
 ---
 
@@ -348,10 +350,10 @@ Maister user decision — "I detected these design characteristics. Please confi
 
 **For enhancements** (`is_enhancement = true`):
 
-Delegate codebase analysis to the `maister-codebase-analyzer` skill rather than reading project files yourself — it keeps raw exploration out of the orchestrator's context.
+Delegate codebase analysis to the `maister:codebase-analyzer` skill rather than reading project files yourself — it keeps raw exploration out of the orchestrator's context.
 
 **INVOKE NOW** -- Load Maister skill call:
-1. Load Maister skill - `maister-codebase-analyzer` (to understand existing product context, tech stack, UI patterns)
+1. Load Maister skill - `maister:codebase-analyzer` (to understand existing product context, tech stack, UI patterns)
 
 **POST-SKILL CONTINUATION**: After codebase-analyzer returns control:
 1. Read `orchestrator-state.yml` to confirm you are the orchestrator
@@ -363,10 +365,10 @@ Delegate codebase analysis to the `maister-codebase-analyzer` skill rather than 
 3. Fetch external links collected in Phase 0 using WebFetch tool for each URL in `design_context.collected_urls`
 4. If `design_context.research_topics` is non-empty: launch information-gatherer agents for each topic
 
-   Delegate each research topic to a `maister-information-gatherer` subagent rather than searching yourself — it keeps raw findings out of the orchestrator's context.
+   Delegate each research topic to a `maister:information-gatherer` subagent rather than searching yourself — it keeps raw findings out of the orchestrator's context.
 
    **INVOKE NOW** -- Dispatch Maister agent call (parallel, one per topic):
-   Dispatch Maister agent - `maister-information-gatherer` subagent per research topic
+   Dispatch Maister agent - `maister:information-gatherer` subagent per research topic
 
    **Context to pass**: research topic, scope constraints, task_path
 
@@ -491,11 +493,11 @@ Maister user decision — "Personas defined. Continue to Idea Generation?"
 **Execute**: Agent via Dispatch Maister agent (deliberately non-interactive to avoid anchoring bias)
 **Resume check**: If `analysis/alternatives.md` exists, skip to Phase 5
 
-Delegate alternatives to the `maister-solution-brainstormer` subagent rather than proposing them yourself — generating them outside the conversation avoids anchoring on your first idea.
+Delegate alternatives to the `maister:solution-brainstormer` subagent rather than proposing them yourself — generating them outside the conversation avoids anchoring on your first idea.
 
 **INVOKE NOW** -- Dispatch Maister agent call:
 
-Dispatch Maister agent - `maister-solution-brainstormer` subagent
+Dispatch Maister agent - `maister:solution-brainstormer` subagent
 
 **Context to pass** (Pattern 7):
 - `task_path`
@@ -561,7 +563,7 @@ Maister user decision — with options:
 
 6. **Write artifact**: Write the selected approach, rationale, alternatives considered (brief summary referencing `analysis/alternatives.md` for full detail), trade-offs accepted, and key design decisions per area to `analysis/design-decisions.md`.
 
-7. **HTML companion** *(skip when `options.html_output` is false)*: invoke `maister-html-companion-writer` (Dispatch Maister agent) for `analysis/design-decisions.md` (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.idea_convergence.artifacts`.
+7. **HTML companion** *(skip when `options.html_output` is false)*: invoke `maister:html-companion-writer` (Dispatch Maister agent) for `analysis/design-decisions.md` (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.idea_convergence.artifacts`.
 
 **Output**: `analysis/design-decisions.md` (+ `.html` companion)
 **State**: Update `phase_summaries.idea_convergence` with `selected_approach`, `trade_offs_accepted`, `key_decisions`
@@ -636,7 +638,7 @@ If no gaps: proceed to Phase 7/8.
 
 > **ANTI-PATTERN**: Do NOT skip depth verification because "the user already approved." Approval confirms direction; depth verification ensures implementation-readiness.
 
-**HTML companion** *(skip when `options.html_output` is false)*: once `analysis/feature-spec.md` is complete (all sections written, depth verification passed), invoke `maister-html-companion-writer` (Dispatch Maister agent) for it (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.feature_specification.artifacts`.
+**HTML companion** *(skip when `options.html_output` is false)*: once `analysis/feature-spec.md` is complete (all sections written, depth verification passed), invoke `maister:html-companion-writer` (Dispatch Maister agent) for it (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.feature_specification.artifacts`.
 
 **Output**: `analysis/feature-spec.md` (+ `.html` companion)
 **State**: Update `phase_summaries.feature_specification` with `spec_sections` (individually approved), `sections_count`
@@ -650,14 +652,14 @@ Maister user decision — "Specification complete." Read `next_phase` from `orch
 > **Phase entry self-check**: Before executing this phase, locate the `Maister user decision` tool call from Phase 6 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `Maister task update`) without a corresponding `Maister user decision` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Generate visual mockups (HTML/CSS via the visual companion or ASCII fallback) for UI-focused designs
-**Execute**: Load Maister skill - `maister-mockup-studio`
+**Execute**: Load Maister skill - `maister:mockup-studio`
 **Resume check**: If `analysis/mockups/` contains any files, skip to Phase 8
 
 **Skip if**: NOT `is_ui_focused`
 
 Mockup generation is owned by the `mockup-studio` skill — it runs design-resource discovery, manages the visual companion server + browser, generates user-facing wireframes, runs the interactive refinement loop, and falls back to ASCII when the visual companion is unavailable. This orchestrator delegates and keeps its phase gate.
 
-**INVOKE NOW** — Load Maister skill - `maister-mockup-studio` with:
+**INVOKE NOW** — Load Maister skill - `maister:mockup-studio` with:
 - `task_path`: this task directory
 - `output_subdir`: `analysis/mockups`
 - `format`: `html` when `options.visual_enabled` is true, else `ascii` (so `mockup_format: ascii` / `--no-visual` force ASCII)
@@ -729,19 +731,19 @@ Maister user decision — with options:
 
 5. **Shut down visual companion server** (if it was used): `curl -s -X POST http://localhost:[port]/shutdown`
 
-5b. **HTML companion** *(skip when `options.html_output` is false)* (after final approval, so it reflects the approved brief — do NOT regenerate on each refinement iteration): invoke `maister-html-companion-writer` (Dispatch Maister agent) for `outputs/product-brief.md` (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.review_handoff.artifacts` and rewrite `dashboard-data.js` so the Product Brief hero card links the HTML.
+5b. **HTML companion** *(skip when `options.html_output` is false)* (after final approval, so it reflects the approved brief — do NOT regenerate on each refinement iteration): invoke `maister:html-companion-writer` (Dispatch Maister agent) for `outputs/product-brief.md` (see Operator Visibility § 3). Register the returned `html_path` in `phase_summaries.review_handoff.artifacts` and rewrite `dashboard-data.js` so the Product Brief hero card links the HTML.
 
 6. **Reconcile artifacts against disk** — compare every `artifacts[]` entry in state with what actually exists and name every missing path in the summary (`orchestrator-patterns.md` § 10).
 
 7. On approval, update task status and suggest next steps.
 
-   Output this message EXACTLY — do NOT invent alternative commands (e.g. `$maister-codex:maister-feature:new` does not exist):
+   Output this message EXACTLY — do NOT invent alternative commands (e.g. `$maister:feature:new` does not exist):
 
 ```
 Product brief approved and saved to: [task-path]/outputs/product-brief.md
 
 To start development based on this design, clear context first or start a new session, then run:
-$maister-codex:maister-development [task-path]
+$maister:development [task-path]
 ```
 
 **Output**: `outputs/product-brief.md`
@@ -852,8 +854,8 @@ orchestrator:
 ## Command Integration
 
 Invoked via:
-- `$maister-codex:maister-product-design [description] [--no-visual] [--research=PATH]` (new)
-- `$maister-codex:maister-product-design [task-path] [--from=PHASE]` (resume)
+- `$maister:product-design [description] [--no-visual] [--research=PATH]` (new)
+- `$maister:product-design [task-path] [--from=PHASE]` (resume)
 
 **Flags**:
 | Flag | Effect |
@@ -875,7 +877,7 @@ Task directory: `.maister/tasks/product-design/YYYY-MM-DD-task-name/`
 The product brief and mockups are consumed by the development orchestrator. Pass the product-design task path directly:
 
 ```
-$maister-codex:maister-development .maister/tasks/product-design/YYYY-MM-DD-task-name/
+$maister:development .maister/tasks/product-design/YYYY-MM-DD-task-name/
 ```
 
 The development orchestrator auto-detects the product-design task path during initialization (Step 4: Ingest Design Context) and copies:
@@ -891,7 +893,7 @@ It then generates `analysis/design-context/INDEX.md` (screen/component inventory
 A completed research workflow can feed into product design:
 
 ```
-$maister-codex:maister-product-design "Design feature X" --research=.maister/tasks/research/YYYY-MM-DD-research/
+$maister:product-design "Design feature X" --research=.maister/tasks/research/YYYY-MM-DD-research/
 ```
 
 Research findings are imported into `context/research-context/` and synthesized alongside other context sources in Phase 1.

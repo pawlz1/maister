@@ -1,5 +1,5 @@
 ---
-name: maister-performance
+name: performance
 description: Orchestrates performance optimization workflows using static code analysis to identify bottlenecks (N+1 queries, missing indexes, O(n^2) algorithms, blocking I/O, memory leaks). Accepts optional user-provided profiling data. Reuses standard specification, planning, implementation, and verification phases.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -210,7 +212,7 @@ Use for:
 
 **Purpose**: Comprehensive codebase exploration for performance context, followed by scope/requirements clarification
 **Execute**:
-1. Load Maister skill - `maister-codebase-analyzer`
+1. Load Maister skill - `maister:codebase-analyzer`
 2. Update state with analysis results
 3. Direct - use Maister user decision for max 5 critical clarifying questions about performance concerns, hotspots, and optimization goals
 4. Save clarifications to `analysis/clarifications.md`
@@ -226,7 +228,7 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
 ### Phase 2: Static Performance Analysis
 
 **Purpose**: Identify bottlenecks through static code analysis + optional user profiling data
-**Execute**: Dispatch Maister agent - `maister-bottleneck-analyzer` subagent
+**Execute**: Dispatch Maister agent - `maister:bottleneck-analyzer` subagent
 **Output**: `analysis/performance-analysis.md`
 **State**: Update `performance_context.bottlenecks_identified`, `performance_context.user_data_available`, `performance_context.bottleneck_priorities`
 
@@ -237,11 +239,11 @@ Pass `task_type="enhancement"` and the performance-focused description. The code
    - Options: "Yes, let me add files to analysis/user-profiling-data/" | "No, proceed with static analysis only"
 3. If user chooses to add files, wait for them, then proceed
 
-Delegate bottleneck analysis to the `maister-bottleneck-analyzer` subagent (Dispatch Maister agent) rather than analyzing code yourself — it writes the report the later phases consume.
+Delegate bottleneck analysis to the `maister:bottleneck-analyzer` subagent (Dispatch Maister agent) rather than analyzing code yourself — it writes the report the later phases consume.
 
 **INVOKE NOW** — Dispatch Maister agent call:
 
-4. Dispatch Maister agent - `maister-bottleneck-analyzer` subagent
+4. Dispatch Maister agent - `maister:bottleneck-analyzer` subagent
 
 **Context to pass**: task_path, description, codebase analysis summary from Phase 1, user data paths (if any)
 
@@ -272,11 +274,11 @@ Maister user decision - "Performance analysis complete. [N] bottlenecks identifi
 
 📋 **Standards Discovery**: Read `.maister/docs/INDEX.md` before creating spec.
 
-Delegate spec writing to the `maister-specification-creator` subagent (Dispatch Maister agent) regardless of task size — the orchestrator never writes spec.md itself.
+Delegate spec writing to the `maister:specification-creator` subagent (Dispatch Maister agent) regardless of task size — the orchestrator never writes spec.md itself.
 
 **INVOKE NOW** — Dispatch Maister agent call:
 
-4. Dispatch Maister agent - `maister-specification-creator` subagent
+4. Dispatch Maister agent - `maister:specification-creator` subagent
 
 **Context to pass**: task_path, task_type="performance", task_description, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), phase_summaries (codebase_analysis, bottleneck_analysis), html_style_guide_path (for the spec.html companion)
 
@@ -291,7 +293,7 @@ Maister user decision - Display executive summary before asking. Read `implement
 > **Phase entry self-check**: Before executing this phase, locate the `Maister user decision` tool call from Phase 3 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `Maister task update`) without a corresponding `Maister user decision` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Independent review of optimization specification
-**Execute**: Dispatch Maister agent - `maister-spec-auditor` subagent
+**Execute**: Dispatch Maister agent - `maister:spec-auditor` subagent
 **Output**: `verification/spec-audit.md`
 **State**: Update `options.spec_audit_enabled`
 
@@ -314,11 +316,11 @@ Maister user decision - Display executive summary before asking. Read `verificat
 
 📋 **Standards Discovery**: Read `.maister/docs/INDEX.md` before planning.
 
-Delegate planning to the `maister-implementation-planner` subagent (Dispatch Maister agent) regardless of task size — the orchestrator never writes implementation-plan.md itself.
+Delegate planning to the `maister:implementation-planner` subagent (Dispatch Maister agent) regardless of task size — the orchestrator never writes implementation-plan.md itself.
 
 **INVOKE NOW** — Dispatch Maister agent call:
 
-**Execute**: Dispatch Maister agent - `maister-implementation-planner` subagent
+**Execute**: Dispatch Maister agent - `maister:implementation-planner` subagent
 **Output**: `implementation/implementation-plan.md`
 **State**: Update task groups and dependencies
 
@@ -338,11 +340,11 @@ Maister user decision - Display executive summary before asking. Read `implement
 
 📋 **Standards Discovery**: Implementation reads `.maister/docs/INDEX.md` continuously.
 
-Delegate implementation to the `maister-implementation-plan-executor` skill regardless of task size — it owns wave dispatch, progress tracking, and the work-log; the orchestrator never writes code itself.
+Delegate implementation to the `maister:implementation-plan-executor` skill regardless of task size — it owns wave dispatch, progress tracking, and the work-log; the orchestrator never writes code itself.
 
 **INVOKE NOW** — Load Maister skill call:
 
-**Execute**: Load Maister skill - `maister-implementation-plan-executor`
+**Execute**: Load Maister skill - `maister:implementation-plan-executor`
 **Output**: Implemented optimizations, `implementation/work-log.md`
 **State**: Update implementation progress, extract phase_summaries.implementation
 
@@ -390,7 +392,7 @@ Maister user decision - "Options selected. Continue to Phase 8?"
 
 **Execute**:
 
-**Step 1**: Invoke Load Maister skill - `maister-implementation-verifier`
+**Step 1**: Invoke Load Maister skill - `maister:implementation-verifier`
 
 **Step 2**: Display detailed issue breakdown grouped by category and severity (critical/warning/info), listing location, description, and fixability for each.
 
@@ -404,7 +406,7 @@ Maister user decision - "Options selected. Continue to Phase 8?"
 3. Fix selected issues
 4. After fixes: set `skip_test_suite: false` (code changed, tests must re-run)
 5. Maister user decision — "Re-run verification to check fixes?" with options: "Yes, re-run verification" / "No, proceed to next phase"
-6. If re-run → re-invoke `maister-implementation-verifier` → return to Step 2
+6. If re-run → re-invoke `maister:implementation-verifier` → return to Step 2
 
 → **MANDATORY GATE** — fires regardless of permission mode, session-reminders, or prior approval patterns. Invoke `Maister user decision` now. Proceeding without a user response is a protocol violation (orchestrator-patterns.md § 2 / § 2.1).
 
@@ -518,8 +520,8 @@ orchestrator:
 ## Command Integration
 
 Invoked via:
-- `$maister-codex:maister-performance [description] [--sequential]` (new)
-- `$maister-codex:maister-performance [task-path] [--from=PHASE] [--sequential]` (resume)
+- `$maister:performance [description] [--sequential]` (new)
+- `$maister:performance [task-path] [--from=PHASE] [--sequential]` (resume)
 
 Flags:
 - `--from=PHASE`: Resume from specific phase

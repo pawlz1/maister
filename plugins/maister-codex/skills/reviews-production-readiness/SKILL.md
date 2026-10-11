@@ -1,5 +1,5 @@
 ---
-name: maister-reviews-production-readiness
+name: reviews-production-readiness
 description: Verify production deployment readiness with comprehensive checks
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -130,7 +132,7 @@ You are performing comprehensive production readiness analysis covering configur
 
 ```
 Use Dispatch Maister agent:
-  subagent_type: "maister-production-readiness-checker"
+  subagent_type: "maister:production-readiness-checker"
   description: "Production readiness check"
   prompt: |
     Verify production readiness at: [path from user or from Maister user decision]
@@ -153,17 +155,17 @@ The production-readiness-checker subagent will:
 
 **Example 1**: Check specific task for production
 ```
-User: $maister-codex:maister-reviews-production-readiness .maister/tasks/development/2025-10-24-payment-api/
+User: $maister:reviews-production-readiness .maister/tasks/development/2025-10-24-payment-api/
 ```
 
 **Example 2**: Check feature for staging
 ```
-User: $maister-codex:maister-reviews-production-readiness src/features/notifications/ --target=staging
+User: $maister:reviews-production-readiness src/features/notifications/ --target=staging
 ```
 
 **Example 3**: Comprehensive project check
 ```
-User: $maister-codex:maister-reviews-production-readiness .
+User: $maister:reviews-production-readiness .
 ```
 
 ## What to Expect

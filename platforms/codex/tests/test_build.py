@@ -27,7 +27,7 @@ class BuildTests(unittest.TestCase):
             name = source.parent.name if source.name == 'SKILL.md' else source.stem
             text = (self.output / 'skills' / name / 'SKILL.md').read_text()
             fields, body = BUILD.frontmatter(text)
-            self.assertEqual(fields['name'], 'maister-' + name)
+            self.assertEqual(fields['name'], name)
             self.assertIn('Maister Codex execution adapter', body)
             _, source_body = BUILD.frontmatter(source.read_text())
             self.assertTrue(body.endswith(BUILD.translate(source_body)))
@@ -68,18 +68,31 @@ class BuildTests(unittest.TestCase):
                     text = file.read_text()
                     self.assertNotIn('CLAUDE_PLUGIN_ROOT', text)
                     self.assertNotIn('CLAUDE.md', text)
-                    self.assertNotIn('maister:', text)
+                    self.assertNotIn('/maister:', text)
+                    self.assertNotIn('$maister-codex:', text)
                     self.assertNotIn('$maister-init', text)
                     self.assertNotIn('subagent_type="Explore"', text)
         self.assertTrue((self.output / 'skills/docs-manager/references/agents-md-template.md').is_file())
 
     def test_manifests_and_scripts(self):
         manifest = json.loads((self.output / '.codex-plugin/plugin.json').read_text())
-        self.assertEqual(manifest['name'], 'maister-codex')
+        self.assertEqual(manifest['name'], 'maister')
         for field in ('skills', 'hooks', 'mcpServers'):
             self.assertTrue((self.output / manifest[field]).exists())
         self.assertTrue((self.output / 'runtime/tasks.py').is_file())
         self.assertTrue((self.output / 'hooks/guard.py').is_file())
+
+    def test_shared_namespace_and_native_invocation(self):
+        self.assertEqual(BUILD.translate('/maister:work Fix login --type=bug'),
+                         '$maister:work Fix login --type=bug\n')
+        self.assertEqual(BUILD.translate('maister:development maister:task-group-implementer'),
+                         'maister:development maister:task-group-implementer\n')
+        marketplace = json.loads((BUILD.ROOT / '.agents/plugins/marketplace.json').read_text())
+        plugin = next(item for item in marketplace['plugins'] if item['name'] == 'maister')
+        self.assertEqual(plugin['source']['path'], './plugins/maister-codex')
+        readme = (self.output / 'README.md').read_text()
+        for source in (BUILD.SOURCE / 'commands').glob('*.md'):
+            self.assertIn('$maister:' + source.stem, readme)
 
     def test_deterministic_rebuild(self):
         def snapshot():

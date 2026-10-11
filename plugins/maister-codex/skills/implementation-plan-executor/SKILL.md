@@ -1,5 +1,5 @@
 ---
-name: maister-implementation-plan-executor
+name: implementation-plan-executor
 description: Execute implementation plans by delegating each task group to task-group-implementer subagent. Main agent coordinates prepares context, invokes subagent, processes output, marks checkboxes, updates work-log. Uses lazy standards loading from INDEX.md with keyword-triggered discovery.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -179,7 +181,7 @@ Never assume missing `Files to Modify` means "None" — silent disjoint assumpti
 
 For each wave:
 
-0. For every group in the wave, `Maister task update` to `status: "in_progress"` with `owner: "maister-task-group-implementer"`.
+0. For every group in the wave, `Maister task update` to `status: "in_progress"` with `owner: "maister:task-group-implementer"`.
 
 1. **Prepare group context** (per group):
    - Extract group content from `implementation-plan.md` (including `Visual References` section, if present)
@@ -197,7 +199,7 @@ For each wave:
    ✅ Right: One assistant message with N Dispatch Maister agent-use blocks emitted before any of them returns. The runtime returns all N results before the next assistant turn.
 
    Per-call parameters:
-   - subagent_type: `maister-task-group-implementer`
+   - subagent_type: `maister:task-group-implementer`
    - prompt: per-group content + initial standards + INDEX.md path + spec excerpt + sibling-wave note (see "Subagent Invocation")
 
    **SELF-CHECK before sending the message**: Are you about to emit a message with one `Task` call when the current wave has more than one group? If yes, STOP. Compose every wave member's prompt first, then emit them all in the same message. Awaiting one before composing the next violates this skill's contract. If the wave has exactly one group, a single `Task` call is correct.

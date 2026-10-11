@@ -22,7 +22,7 @@ def main():
         env = dict(os.environ, CODEX_HOME=home)
         for command in (
             ['plugin', 'marketplace', 'add', str(ROOT)],
-            ['plugin', 'add', 'maister-codex@maister-codex-plugins', '--json'],
+            ['plugin', 'add', 'maister@maister-codex-plugins', '--json'],
         ):
             subprocess.run([args.codex] + command, env=env, check=True,
                            capture_output=True, text=True, timeout=30)
@@ -63,14 +63,14 @@ def main():
                 result = request(2, 'skills/list', {
                     'cwds': [str(ROOT)], 'forceReload': True,
                 })
-                expected = {'maister-codex:maister-' + p.parent.name
+                expected = {'maister:' + p.parent.name
                             for p in (ROOT / 'plugins/maister-codex/skills').glob('*/SKILL.md')}
                 found = set()
                 for item in result['data']:
                     if item.get('errors'):
                         raise RuntimeError(item['errors'])
                     found.update(skill['name'] for skill in item['skills']
-                                 if skill['name'].startswith('maister-'))
+                                 if skill['name'].startswith(('maister:', 'maister-codex:')))
                 if found != expected:
                     raise RuntimeError({'missing': sorted(expected - found),
                                         'unexpected': sorted(found - expected)})

@@ -1,5 +1,5 @@
 ---
-name: maister-development
+name: development
 description: Unified orchestrator for all development tasks. ALWAYS execute when invoked — never skip for 'straightforward' tasks. Phases adapt based on detected task characteristics rather than predetermined types. Use for any development work that modifies code.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -229,7 +231,7 @@ Use for **all development tasks**: bug fixes, enhancements, new features, and an
 
 **Purpose**: Comprehensive codebase exploration followed by scope/requirements clarification
 **Execute**:
-1. Load Maister skill - `maister-codebase-analyzer`
+1. Load Maister skill - `maister:codebase-analyzer`
 2. Update state with analysis results
 3. Direct - use Maister user decision for max 5 critical clarifying questions
 4. Save clarifications to `analysis/clarifications.md`
@@ -244,7 +246,7 @@ Use for **all development tasks**: bug fixes, enhancements, new features, and an
 
 **Purpose**: Compare current vs desired state, detect task characteristics, then resolve scope/approach decisions
 **Execute**:
-1. Dispatch Maister agent - `maister-gap-analyzer` subagent
+1. Dispatch Maister agent - `maister:gap-analyzer` subagent
 2. **Extract and store structured data from gap-analyzer result**:
    a. Read `task_characteristics` from gap-analyzer output — 5 fields: `has_reproducible_defect`, `modifies_existing_code`, `creates_new_entities`, `involves_data_operations`, `ui_heavy`
    b. Write all 5 fields to `orchestrator-state.yml` at `task_context.task_characteristics`
@@ -315,7 +317,7 @@ Maister user decision - "TDD red gate complete. Continue to Phase 4?"
 > **Phase entry self-check**: Before executing this phase, locate the `Maister user decision` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `Maister task update`) without a corresponding `Maister user decision` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Generate UI mockups (HTML by default, ASCII when configured) showing UI integration
-**Execute**: Load Maister skill - `maister-mockup-studio`
+**Execute**: Load Maister skill - `maister:mockup-studio`
 **Output**: HTML → `analysis/design-context/mockups/*.html`; ASCII → `analysis/design-context/ascii/ui-mockups.md`. Both append entries to `analysis/design-context/INDEX.md`.
 **State**: Update `phase_summaries.ui_mockups`, `phase_summaries.design`, and `task_context.design_resources` (from mockup-studio's discovery)
 
@@ -376,11 +378,11 @@ Maister user decision - "UI mockups complete — review the live gallery at [com
 
 **Part C — Specification Creation (subagent)**:
 
-Delegate spec writing to the `maister-specification-creator` subagent (Dispatch Maister agent) regardless of task size — the orchestrator coordinates and never writes spec.md itself, so the spec gets the subagent's reusability search and a clean context.
+Delegate spec writing to the `maister:specification-creator` subagent (Dispatch Maister agent) regardless of task size — the orchestrator coordinates and never writes spec.md itself, so the spec gets the subagent's reusability search and a clean context.
 
 **INVOKE NOW** — Dispatch Maister agent call:
 
-6. Dispatch Maister agent - `maister-specification-creator` subagent
+6. Dispatch Maister agent - `maister:specification-creator` subagent
 
 **Context to pass to subagent**: task_path, task_description, task_characteristics, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), risk_level, phase_summaries (codebase_analysis, gap_analysis, clarifications, scope_clarifications, ui_mockups, design), research_context (if any), design_reference (if any — points spec-creator to `analysis/design-context/` for mockups and brief), html_style_guide_path (for the spec.html companion)
 
@@ -398,7 +400,7 @@ Maister user decision - Display executive summary before asking. Read `implement
 > **Phase entry self-check**: Before executing this phase, locate the `Maister user decision` tool call from Phase 5 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `Maister task update`) without a corresponding `Maister user decision` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Independent review of specification before implementation
-**Execute**: Dispatch Maister agent - `maister-spec-auditor` subagent
+**Execute**: Dispatch Maister agent - `maister:spec-auditor` subagent
 **Output**: `verification/spec-audit.md`
 **State**: Update `options.spec_audit_enabled`
 
@@ -418,11 +420,11 @@ Maister user decision - Display executive summary before asking. Read `verificat
 
 **Purpose**: Break specification into implementation steps
 
-Delegate planning to the `maister-implementation-planner` subagent (Dispatch Maister agent) regardless of task size — the orchestrator never writes implementation-plan.md itself.
+Delegate planning to the `maister:implementation-planner` subagent (Dispatch Maister agent) regardless of task size — the orchestrator never writes implementation-plan.md itself.
 
 **INVOKE NOW** — Dispatch Maister agent call:
 
-**Execute**: Dispatch Maister agent - `maister-implementation-planner` subagent
+**Execute**: Dispatch Maister agent - `maister:implementation-planner` subagent
 **Output**: `implementation/implementation-plan.md`
 **State**: Update task groups and dependencies
 
@@ -440,11 +442,11 @@ Maister user decision - Display executive summary before asking. Read `implement
 
 **Purpose**: Execute the implementation plan
 
-Delegate implementation to the `maister-implementation-plan-executor` skill regardless of task size — it owns wave dispatch, progress tracking, and the work-log; the orchestrator never writes code itself.
+Delegate implementation to the `maister:implementation-plan-executor` skill regardless of task size — it owns wave dispatch, progress tracking, and the work-log; the orchestrator never writes code itself.
 
 **INVOKE NOW** — Load Maister skill call:
 
-**Execute**: Load Maister skill - `maister-implementation-plan-executor`
+**Execute**: Load Maister skill - `maister:implementation-plan-executor`
 **Output**: Implemented code, `implementation/work-log.md`
 **State**: Update implementation progress, extract phase_summaries.implementation
 
@@ -535,7 +537,7 @@ Write each answer to state as an explicit `true`/`false` — Phase 14 reads thes
 
 **Execute**:
 
-**Step 1**: Invoke Load Maister skill - `maister-implementation-verifier`
+**Step 1**: Invoke Load Maister skill - `maister:implementation-verifier`
 
 **Step 2**: Display detailed issue breakdown grouped by category and severity:
 ```
@@ -563,7 +565,7 @@ Verification Results:
 3. Fix selected issues, log each to `verification_context.fixes_applied`
 4. After fixes applied: set `skip_test_suite: false` (code changed, tests must re-run)
 5. Maister user decision — "Re-run verification to check fixes?" with options:
-   - "Yes, re-run verification" → re-invoke `maister-implementation-verifier` → return to Step 2
+   - "Yes, re-run verification" → re-invoke `maister:implementation-verifier` → return to Step 2
    - "No, proceed to next phase"
 6. Update `verification_context.reverify_count`
 
@@ -574,7 +576,7 @@ Verification Results:
 - **MUST NOT proceed with unresolved critical issues unless user explicitly approves**
 
 **⚠️ POST-VERIFICATION CONTINUATION** — After issue resolution completes:
-1. **Canonical report check**: `verification/implementation-verification.md` + `.html` MUST reflect the FINAL post-fix verdict before leaving this phase. If fixes were applied and the canonical report still shows the pre-fix state (regardless of whether re-checks were run via the full verifier skill or individual subagents writing `*-reverify.md` side files), re-invoke `maister-implementation-verifier` (or have it recompile Phase 3) so the report and companion are rewritten with a "Fix & Re-Verification History" section. A stale pre-fix report is a phase-exit violation.
+1. **Canonical report check**: `verification/implementation-verification.md` + `.html` MUST reflect the FINAL post-fix verdict before leaving this phase. If fixes were applied and the canonical report still shows the pre-fix state (regardless of whether re-checks were run via the full verifier skill or individual subagents writing `*-reverify.md` side files), re-invoke `maister:implementation-verifier` (or have it recompile Phase 3) so the report and companion are rewritten with a "Fix & Re-Verification History" section. A stale pre-fix report is a phase-exit violation.
 2. Read `orchestrator-state.yml` to confirm you are the orchestrator
 3. Update state: add Phase 11 to `completed_phases`
 4. Proceed to Phase 12
@@ -592,7 +594,7 @@ Maister user decision - Display executive summary: total issues found, issues fi
 > **⚠ Serialization rule**: Phases 12 and 13 share the Playwright MCP browser instance. They MUST run strictly sequentially. Do NOT dispatch the Phase 12 Task call and the Phase 13 Task call in the same assistant message, even when both are enabled. Wait for Phase 12 to return, honor the `→ MANDATORY GATE` / `Maister user decision` gate below, then start Phase 13. Concurrent dispatch will corrupt both browser sessions.
 
 **Purpose**: Runtime browser verification with screenshots (via Playwright MCP tools, not test file generation)
-**Execute**: Dispatch Maister agent - `maister-e2e-test-verifier` subagent
+**Execute**: Dispatch Maister agent - `maister:e2e-test-verifier` subagent
 **Prompt must include**: task_path (absolute), spec_path, base_url, html_style_guide_path (for the HTML companion reports). If `analysis/design-context/mockups/` exists, also include `design_context_path` so the verifier performs an LLM-judged structural visual-fidelity comparison and writes `verification/visual-fidelity.md`. Report saves to `{task_path}/verification/e2e-verification-report.md`.
 **Output**: `verification/e2e-verification-report.md` (+ `.html` companion), screenshots, `verification/visual-fidelity.md` (+ `.html` companion) (when mockups present — report-only, never gates completion)
 **State**: Update E2E results; on success mark Phase 12 in `completed_phases` (Phase 13 reads this as a precondition).
@@ -614,7 +616,7 @@ Maister user decision - "E2E complete. Continue to Phase 13?"
 **Preconditions**: If `options.e2e_enabled = true`, Phase 12 MUST be present in `completed_phases` before Phase 13 starts. If it is not yet completed (e.g., E2E is still running or failed), do not start Phase 13 — return to the Phase 12 gate.
 
 **Purpose**: Generate user-facing documentation with screenshots
-**Execute**: Dispatch Maister agent - `maister-user-docs-generator` subagent
+**Execute**: Dispatch Maister agent - `maister:user-docs-generator` subagent
 **Prompt must include**: task_path (absolute), spec_path, base_url. **When Phase 12 ran successfully** (E2E enabled and completed), also include `e2e_screenshots_path: {task_path}/verification/screenshots/` together with the instruction *"Reuse applicable E2E screenshots from this directory before capturing new ones via Playwright."* When Phase 12 was skipped or failed, omit `e2e_screenshots_path` entirely. Guide saves to `{task_path}/documentation/user-guide.md`.
 **Output**: `documentation/user-guide.md`, screenshots (reused from E2E run when applicable)
 **State**: Update docs generation status
@@ -787,7 +789,7 @@ When starting development from a completed research task, the orchestrator loads
 
 **Method 1: Research folder as sole argument** (recommended)
 ```
-$maister-codex:maister-development .maister/tasks/research/2026-01-12-oauth-research
+$maister:development .maister/tasks/research/2026-01-12-oauth-research
 ```
 The orchestrator auto-detects this is a research folder and:
 - Extracts task description from `research_context.research_question`
@@ -796,7 +798,7 @@ The orchestrator auto-detects this is a research folder and:
 
 **Method 2: Explicit --research flag**
 ```
-$maister-codex:maister-development "Implement OAuth" --research=.maister/tasks/research/2026-01-12-oauth-research
+$maister:development "Implement OAuth" --research=.maister/tasks/research/2026-01-12-oauth-research
 ```
 
 ### Research Artifacts (Standard List)
@@ -832,13 +834,13 @@ When mockups or design artifacts are present, they become **binding inputs** to 
 
 **Source 1 — Product-design task path** (recommended handoff):
 ```
-$maister-codex:maister-development .maister/tasks/product-design/2026-05-09-user-dashboard/
+$maister:development .maister/tasks/product-design/2026-05-09-user-dashboard/
 ```
 Auto-detected when the argument resolves to a `.maister/tasks/product-design/*` directory. Brief and mockups are copied into `design-context/`.
 
 **Source 2 — Inline mockup paths in task description**:
 ```
-$maister-codex:maister-development "Implement the dashboard from /tmp/dashboard-mockup.html"
+$maister:development "Implement the dashboard from /tmp/dashboard-mockup.html"
 ```
 Auto-detected file paths (`.html`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.pdf`) are copied into `design-context/mockups/`. Design-tool URLs (Figma, Sketch Cloud, Zeplin) are recorded in `design-context/external-links.md`.
 
@@ -871,8 +873,8 @@ Non-UI tasks see zero behavior change.
 ## Command Integration
 
 Invoked via:
-- `$maister-codex:maister-development [description] [--e2e] [--user-docs] [--research=PATH]` (new)
-- `$maister-codex:maister-development [task-path] [--from=PHASE] [--reset-attempts]` (resume)
+- `$maister:development [description] [--e2e] [--user-docs] [--research=PATH]` (new)
+- `$maister:development [task-path] [--from=PHASE] [--reset-attempts]` (resume)
 
 ---
 

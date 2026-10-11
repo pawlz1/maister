@@ -1,5 +1,5 @@
 ---
-name: maister-standards-update
+name: standards-update
 description: Update or create project standards from conversation context or explicit description
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -110,9 +112,9 @@ Update or create standards in `.maister/docs/standards/` based on conversation c
 ## Usage
 
 ```bash
-$maister-codex:maister-standards-update                                    # Detect from conversation
-$maister-codex:maister-standards-update "always use React.memo for lists"  # From description
-$maister-codex:maister-standards-update --from=/path/to/other-project      # Sync from another project
+$maister:standards-update                                    # Detect from conversation
+$maister:standards-update "always use React.memo for lists"  # From description
+$maister:standards-update --from=/path/to/other-project      # Sync from another project
 ```
 
 ---
@@ -125,7 +127,7 @@ When `--from=PATH` is provided, the skill switches to **sync mode** — importin
 
 1. Resolve the path (absolute or relative to cwd)
 2. Check `PATH/.maister/docs/standards/` exists. If not, inform the user and stop.
-3. Check `.maister/docs/standards/` exists in the current project. If not, offer to run `$maister-codex:maister-init` first.
+3. Check `.maister/docs/standards/` exists in the current project. If not, offer to run `$maister:init` first.
 
 ### SYNC STEP 2: Analyze Differences
 
@@ -152,7 +154,7 @@ For each selected standard:
 
 ### SYNC STEP 4: Update INDEX.md
 
-Invoke `docs-operator` subagent via Dispatch Maister agent (subagent_type: `maister-docs-operator`):
+Invoke `docs-operator` subagent via Dispatch Maister agent (subagent_type: `maister:docs-operator`):
 > "Regenerate INDEX.md to include all newly added/updated standards. Verify AGENTS.md integration."
 
 Wait for docs-operator to complete, then immediately proceed to SYNC STEP 5.
@@ -224,7 +226,7 @@ No user prompt needed — just inform: "Updating existing standard: [name]" or "
 
 > Each standard uses a `###` heading with 1-10 lines description (excluding code snippets). Multiple standards per topic file. Split large topics into sub-topic files.
 
-**Invoke `docs-operator` subagent** via Dispatch Maister agent (subagent_type: `maister-docs-operator`) with context:
+**Invoke `docs-operator` subagent** via Dispatch Maister agent (subagent_type: `maister:docs-operator`) with context:
 
 For **updates**:
 > "Update documentation file: standards/[category]/[name].md. Current content: [content]. Add/change: [new conventions]. Integrate new practices, maintain markdown formatting, organize logically, preserve existing unless conflicts. Update INDEX.md entry with practice-specific description (enumerate actual practices, not generic category)."
@@ -244,4 +246,4 @@ Display a summary: what was updated/created, practices added, and next steps (re
 
 ## Prerequisites
 
-If `.maister/docs/` doesn't exist, offer to run `$maister-codex:maister-init` first.
+If `.maister/docs/` doesn't exist, offer to run `$maister:init` first.

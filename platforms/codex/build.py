@@ -33,8 +33,7 @@ def translate(text):
     text = text.replace('CLAUDE.md', 'AGENTS.md')
     text = text.replace('claude-md-template.md', 'agents-md-template.md')
     text = text.replace('Claude Code', 'Codex')
-    text = text.replace('maister:', 'maister-')
-    text = re.sub(r'/maister-([a-z*][a-z0-9*-]*)', r'$maister-codex:maister-\1', text)
+    text = re.sub(r'/maister:([a-z*][a-z0-9*-]*)', r'$maister:\1', text)
     for old, new in (
         ('AskUserQuestion', 'Maister user decision'),
         ('TaskCreate', 'Maister task create'), ('TaskUpdate', 'Maister task update'),
@@ -99,7 +98,7 @@ def build(output=DEFAULT_OUTPUT):
         text = translate(source.read_text())
         if source.name == 'SKILL.md':
             fields, body = frontmatter(text)
-            name = 'maister-' + source.parent.name
+            name = source.parent.name
             description = fields['description']
             text = f'---\nname: {name}\ndescription: {description}\n---\n\n{adapter}\n\n---\n\n{body}'
             # Internal machinery is loaded explicitly by its parent, never selected
@@ -126,11 +125,11 @@ def build(output=DEFAULT_OUTPUT):
         destination = output / 'skills' / command.stem / 'SKILL.md'
         destination.parent.mkdir(parents=True)
         destination.write_text(
-            f'---\nname: maister-{command.stem}\ndescription: {fields["description"]}\n---\n\n'
+            f'---\nname: {command.stem}\ndescription: {fields["description"]}\n---\n\n'
             + adapter + '\n\n---\n\n' + body
         )
     source_manifest = json.loads((SOURCE / '.claude-plugin/plugin.json').read_text())
-    manifest = dict(source_manifest, name='maister-codex',
+    manifest = dict(source_manifest, name='maister',
                     description='Structured, standards-aware development workflows for Codex')
     manifest.update({'skills': './skills/', 'mcpServers': './.mcp.json',
                      'hooks': './hooks/hooks.json'})

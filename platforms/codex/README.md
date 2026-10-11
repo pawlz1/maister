@@ -29,7 +29,7 @@ Run these commands in your terminal, not in the Codex chat:
 
 ```bash
 codex plugin marketplace add pawlz1/maister --ref add-codex
-codex plugin add maister-codex@maister-codex-plugins
+codex plugin add maister@maister-codex-plugins
 codex plugin list --marketplace maister-codex-plugins
 ```
 
@@ -47,7 +47,7 @@ cd maister
 make build-codex
 make test-codex
 codex plugin marketplace add .
-codex plugin add maister-codex@maister-codex-plugins
+codex plugin add maister@maister-codex-plugins
 ```
 
 The marketplace root is the repository root, not `plugins/maister-codex/`.
@@ -69,12 +69,18 @@ Verify that the plugin is enabled in `/plugins`. Type `$` to inspect available
 skills, or use the explicit names below. Restart Codex after installing or
 refreshing the package if the skills do not appear.
 
+The public plugin name is `maister`, and operation names match Claude Code.
+Use Codex's native `$maister:<operation>` syntax instead of Claude Code's
+`/maister:<operation>`. No command wrapper or custom slash-command layer is needed.
+The `plugins/maister-codex/` directory and `maister-codex-plugins` marketplace
+are packaging details, not prefixes for workflow commands.
+
 ## Initial project setup
 
 Enter this in the Codex chat:
 
 ```text
-$maister-codex:maister-init
+$maister:init
 ```
 
 The init workflow is intended to discover standards and create `.maister/docs/`,
@@ -82,7 +88,7 @@ The init workflow is intended to discover standards and create `.maister/docs/`,
 and answer its questions. To reuse another project's standards:
 
 ```text
-$maister-codex:maister-init --standards-from=/absolute/path/to/other-project
+$maister:init --standards-from=/absolute/path/to/other-project
 ```
 
 ## First workflow
@@ -90,14 +96,14 @@ $maister-codex:maister-init --standards-from=/absolute/path/to/other-project
 Use the unified entry point to classify and route a task:
 
 ```text
-$maister-codex:maister-work Add a user profile page with avatar upload
+$maister:work Add a user profile page with avatar upload
 ```
 
 Or select the workflow directly:
 
 ```text
-$maister-codex:maister-development Add a user profile page with avatar upload
-$maister-codex:maister-development Fix login timeout --type=bug
+$maister:development Add a user profile page with avatar upload
+$maister:development Fix login timeout --type=bug
 ```
 
 These are chat instructions, not shell commands: do not paste them into a shell,
@@ -116,32 +122,32 @@ as a standalone entry point.
 
 | Skill | Use when |
 |---|---|
-| `$maister-codex:maister-work` | Classify a task or route an existing task folder |
-| `$maister-codex:maister-development` | Features, enhancements and bug fixes |
-| `$maister-codex:maister-performance` | Analyze and optimize bottlenecks |
-| `$maister-codex:maister-migration` | Plan and execute technology or data migrations |
-| `$maister-codex:maister-research` | Gather evidence, synthesize findings and design solutions |
-| `$maister-codex:maister-product-design` | Explore, converge and prototype product ideas |
-| `$maister-codex:maister-mockup-studio` | Generate mockups for a screen or feature |
-| `$maister-codex:maister-quick-plan` | Prepare a standards-aware plan before implementation |
-| `$maister-codex:maister-quick-dev` | Implement a clear, small task with standards |
-| `$maister-codex:maister-quick-bugfix` | Fix a small bug with TDD red/green verification |
-| `$maister-codex:maister-init` | Initialize project documentation and standards |
-| `$maister-codex:maister-standards-discover` | Discover conventions from the project |
-| `$maister-codex:maister-standards-update` | Add, refine or import standards |
-| `$maister-codex:maister-reviews-code` | Review quality, security and performance |
-| `$maister-codex:maister-reviews-pragmatic` | Detect over-engineering |
-| `$maister-codex:maister-reviews-spec-audit` | Audit a specification |
-| `$maister-codex:maister-reviews-reality-check` | Check whether the work solves the problem |
-| `$maister-codex:maister-reviews-production-readiness` | Assess deployment readiness |
+| `$maister:work` | Classify a task or route an existing task folder |
+| `$maister:development` | Features, enhancements and bug fixes |
+| `$maister:performance` | Analyze and optimize bottlenecks |
+| `$maister:migration` | Plan and execute technology or data migrations |
+| `$maister:research` | Gather evidence, synthesize findings and design solutions |
+| `$maister:product-design` | Explore, converge and prototype product ideas |
+| `$maister:mockup-studio` | Generate mockups for a screen or feature |
+| `$maister:quick-plan` | Prepare a standards-aware plan before implementation |
+| `$maister:quick-dev` | Implement a clear, small task with standards |
+| `$maister:quick-bugfix` | Fix a small bug with TDD red/green verification |
+| `$maister:init` | Initialize project documentation and standards |
+| `$maister:standards-discover` | Discover conventions from the project |
+| `$maister:standards-update` | Add, refine or import standards |
+| `$maister:reviews-code` | Review quality, security and performance |
+| `$maister:reviews-pragmatic` | Detect over-engineering |
+| `$maister:reviews-spec-audit` | Audit a specification |
+| `$maister:reviews-reality-check` | Check whether the work solves the problem |
+| `$maister:reviews-production-readiness` | Assess deployment readiness |
 
 Examples:
 
 ```text
-$maister-codex:maister-quick-bugfix Fix division returning a product
-$maister-codex:maister-reviews-code src/ --scope=security
-$maister-codex:maister-standards-discover --scope=quick
-$maister-codex:maister-development Add checkout --e2e --user-docs --code-review
+$maister:quick-bugfix Fix division returning a product
+$maister:reviews-code src/ --scope=security
+$maister:standards-discover --scope=quick
+$maister:development Add checkout --e2e --user-docs --code-review
 ```
 
 ## Resume and chain workflows
@@ -149,10 +155,10 @@ $maister-codex:maister-development Add checkout --e2e --user-docs --code-review
 Pass the actual task folder created by your workflow:
 
 ```text
-$maister-codex:maister-development .maister/tasks/development/2026-10-11-user-profile
-$maister-codex:maister-work .maister/tasks/development/2026-10-11-user-profile
-$maister-codex:maister-development .maister/tasks/research/2026-10-11-auth-research
-$maister-codex:maister-development .maister/tasks/product-design/2026-10-11-dashboard Implement only phase 1
+$maister:development .maister/tasks/development/2026-10-11-user-profile
+$maister:work .maister/tasks/development/2026-10-11-user-profile
+$maister:development .maister/tasks/research/2026-10-11-auth-research
+$maister:development .maister/tasks/product-design/2026-10-11-dashboard Implement only phase 1
 ```
 
 Keep `orchestrator-state.yml`, `codex-tasks.json`, the plan and work log together.
@@ -160,6 +166,23 @@ Do not remove the task registry or manually mark a gated phase as completed to
 force progress. Start a fresh session when handing research/design to development.
 
 ## Updating and uninstalling
+
+### Migrating from the previous plugin name
+
+If you installed the earlier `maister-codex` plugin, remove it before installing
+`maister` to avoid duplicate entry points. Refresh the Git marketplace first, or
+pull and rebuild your local checkout as described below, then run:
+
+```bash
+codex plugin remove maister-codex@maister-codex-plugins
+codex plugin add maister@maister-codex-plugins
+```
+
+Replace previous `$maister-codex:maister-<operation>` invocations with
+`$maister:<operation>`. Project `.maister/` state and artifacts are unchanged;
+do not delete them during migration. Restart Codex and review hook trust again.
+
+### Refreshing the current installation
 
 For a Git marketplace, refresh the branch snapshot:
 
@@ -172,8 +195,8 @@ For a local checkout, pull the branch and run `make build-codex` and
 either method:
 
 ```bash
-codex plugin remove maister-codex@maister-codex-plugins
-codex plugin add maister-codex@maister-codex-plugins
+codex plugin remove maister@maister-codex-plugins
+codex plugin add maister@maister-codex-plugins
 ```
 
 Restart Codex, inspect the installed plugin and review hook trust again if its
@@ -184,9 +207,9 @@ unless you deliberately want to discard your workflow history.
 ## Troubleshooting
 
 - **Marketplace/plugin not found:** check `codex plugin marketplace list`, the
-  `add-codex` branch and the exact selector `maister-codex@maister-codex-plugins`.
+  `add-codex` branch and the exact selector `maister@maister-codex-plugins`.
 - **Skill not found:** confirm the plugin is enabled, restart the session and use
-  the full `$maister-codex:maister-...` name.
+  the full `$maister:...` name.
 - **Hooks do not run:** check Python availability and the CLI's trust status. Do
   not assume that a successful installation enabled the command guard.
 - **Workflow pauses:** answer the pending question explicitly; do not treat a

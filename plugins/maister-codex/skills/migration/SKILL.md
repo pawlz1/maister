@@ -1,5 +1,5 @@
 ---
-name: maister-migration
+name: migration
 description: Orchestrates the complete migration workflow from current state analysis through implementation to compatibility verification. Handles technology migrations, platform changes, and architecture pattern transitions with adaptive risk assessment, incremental execution, and rollback planning. Use when migrating technologies, platforms, or architecture patterns.
 ---
 
@@ -21,15 +21,17 @@ against the skill directory, never against the user's working directory.
 ## Load Maister skill
 
 Read the complete `<root>/skills/<name>/SKILL.md`, execute its instructions in
-the parent context, and return to the caller when done. Names use `maister-`;
-directory names remain the source names. Do not spawn a subagent for a skill
+the parent context, and return to the caller when done. Public names use
+`maister:<name>`; remove the `maister:` namespace to resolve the directory.
+Directory names remain the source names. Do not spawn a subagent for a skill
 that itself delegates. Reading and executing the instructions is Codex's skill
 loading mechanism, not permission to bypass the workflow.
 
 ## Dispatch Maister agent
 
 Use the runtime's subagent spawning tool. For each requested `subagent_type`,
-load `<root>/agents/<role>.md` (remove `maister-` from the role name) and pass its
+load `<root>/agents/<role>.md` (remove `maister:` or the optional custom-agent
+prefix `maister-` from the role name) and pass its
 full instructions plus the complete caller context as the child prompt. Use a
 native `default` child for source roles; these definitions are not automatically
 registered plugin agents. For the source Explore role, use native `explorer`
@@ -217,7 +219,7 @@ Use for:
 
 **Purpose**: Comprehensive analysis of current system before migration, followed by scope/requirements clarification
 **Execute**:
-1. Load Maister skill - `maister-codebase-analyzer`
+1. Load Maister skill - `maister:codebase-analyzer`
 2. Update state with analysis results
 3. Direct - use Maister user decision for max 5 critical clarifying questions about migration scope, target system, and constraints
 4. Save clarifications to `analysis/clarifications.md`
@@ -232,7 +234,7 @@ Use for:
 ### Phase 2: Target State Planning & Gap Analysis
 
 **Purpose**: Define target system and identify migration gaps
-**Execute**: Dispatch Maister agent - `maister-gap-analyzer` subagent
+**Execute**: Dispatch Maister agent - `maister:gap-analyzer` subagent
 **Output**: `analysis/target-state-plan.md`
 **State**: Update `migration_context.migration_type`, `target_system`, `migration_strategy`, `risk_level`, `breaking_changes`, `migration_context.phase_summaries.gap_analysis`
 
@@ -267,7 +269,7 @@ Maister user decision - Display executive summary before asking. Extract from ga
 2. Save gathered requirements to `analysis/requirements.md`
 
 **Part B — Specification Creation (subagent)**:
-3. Dispatch Maister agent - `maister-specification-creator` subagent
+3. Dispatch Maister agent - `maister:specification-creator` subagent
 
 **Context to pass to subagent**: task_path, task_type (migration), task_description, requirements_path (analysis/requirements.md), project_context_paths (INDEX.md + project_doc_paths from state — all discovered project docs), migration_type, current_system, target_system, risk_level, breaking_changes, phase_summaries (current_state_analysis, gap_analysis), html_style_guide_path (for the spec.html companion)
 
@@ -285,7 +287,7 @@ Maister user decision - Display executive summary before asking. Read `implement
 > **Phase entry self-check**: Before executing this phase, locate the `Maister user decision` tool call from Phase 3 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `Maister task update`) without a corresponding `Maister user decision` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Break migration into task groups with rollback steps
-**Execute**: Dispatch Maister agent - `maister-implementation-planner` subagent
+**Execute**: Dispatch Maister agent - `maister:implementation-planner` subagent
 **Output**: `implementation/implementation-plan.md` with rollback procedures
 **State**: Update task groups and dependencies
 
@@ -303,11 +305,11 @@ Maister user decision - Display executive summary before asking. Read `implement
 
 **Purpose**: Execute migration steps with incremental verification
 
-Delegate implementation to the `maister-implementation-plan-executor` skill regardless of task size — it owns wave dispatch, progress tracking, and the work-log; the orchestrator never writes migration code itself.
+Delegate implementation to the `maister:implementation-plan-executor` skill regardless of task size — it owns wave dispatch, progress tracking, and the work-log; the orchestrator never writes migration code itself.
 
 **INVOKE NOW** — Load Maister skill call:
 
-**Execute**: Load Maister skill - `maister-implementation-plan-executor`
+**Execute**: Load Maister skill - `maister:implementation-plan-executor`
 **Output**: Implemented migration changes, `implementation/work-log.md`
 **State**: Update implementation progress, extract `migration_context.phase_summaries.implementation`
 
@@ -330,7 +332,7 @@ Maister user decision - Display executive summary before asking. Extract from `p
 > **Phase entry self-check**: Before executing this phase, locate the `Maister user decision` tool call from Phase 5 in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `Maister task update`) without a corresponding `Maister user decision` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Verify migration success with compatibility and rollback testing
-**Execute**: Load Maister skill - `maister-implementation-verifier`
+**Execute**: Load Maister skill - `maister:implementation-verifier`
 **Output**: `verification/implementation-verification.md`, `verification/compatibility-test-results.md`
 **State**: Update verification results
 
@@ -368,7 +370,7 @@ Maister user decision - Display executive summary before asking. Extract from ve
 3. Maister user decision — "Which issues should I fix?" with options: "Fix all fixable issues" / "Let me choose specific issues" / "Skip fixes, proceed as-is"
 4. Fix selected issues
 5. Maister user decision — "Re-run verification to check fixes?" with options: "Yes, re-run verification" / "No, proceed to next phase"
-6. If re-run → re-invoke `maister-implementation-verifier` → return to Step 1
+6. If re-run → re-invoke `maister:implementation-verifier` → return to Step 1
 7. Max 3 iterations
 
 **Data Safety Critical**: HALT on any data integrity issue - never auto-fix data problems. Always present data issues to user with rollback option.
@@ -389,7 +391,7 @@ Maister user decision - Display executive summary: total issues found, issues fi
 > **Phase entry self-check**: Before executing this phase, locate the `Maister user decision` tool call from the preceding phase in this conversation. If you cannot point to its call ID, STOP and fire that gate now. State updates (`completed_phases`, `Maister task update`) without a corresponding `Maister user decision` call are protocol violations — never paper over a missed gate by updating state.
 
 **Purpose**: Create migration guide for end users
-**Execute**: Dispatch Maister agent - `maister-user-docs-generator` subagent
+**Execute**: Dispatch Maister agent - `maister:user-docs-generator` subagent
 **Output**: `documentation/migration-guide.md`
 **State**: Set documentation complete
 
@@ -504,8 +506,8 @@ orchestrator:
 ## Command Integration
 
 Invoked via:
-- `$maister-codex:maister-migration [description] [--type=code|data|architecture|general] [--user-docs] [--sequential]` (new)
-- `$maister-codex:maister-migration [task-path] [--from=PHASE] [--sequential]` (resume)
+- `$maister:migration [description] [--type=code|data|architecture|general] [--user-docs] [--sequential]` (new)
+- `$maister:migration [task-path] [--from=PHASE] [--sequential]` (resume)
 
 Flags:
 - `--type=code|data|architecture|general`: Migration category (affects risk focus). One of those four values; any other value stops at initialization before a task directory exists. Absent, Phase 2 classifies the migration. Name technologies in the description — they belong in `current_system` / `target_system`, not in this flag.
