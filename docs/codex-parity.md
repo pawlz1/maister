@@ -102,3 +102,34 @@ Python 3.9.6 is available. Codex was found outside PATH at
 `0.162.0-alpha.17.2`. Node.js is not available in the inspected PATH. Do not modify
 personal Codex configuration or authentication to test this plugin; use an
 isolated CODEX_HOME for installation/parser tests.
+
+## Implementation evidence (2026-10-11)
+
+- Branch `add-codex` created from the baseline; implementation changes are
+  committed after relevant local validation.
+- Generator covers all 17 skills, six command entry points and 25 source roles.
+  Source file hashes and complete translated bodies are checked; assets and the
+  pinned MCP configuration are preserved byte-for-byte.
+- 22 local tests pass: deterministic builds, coverage, source protection,
+  resources, internal invocation policy, hook stdin/stdout, malformed-input
+  denial, dangerous commands, persistent task IDs, dependencies, cycles,
+  metadata and CLI operations.
+- Actual Codex CLI installs the package into an isolated CODEX_HOME. Its
+  app-server `skills/list` discovers all 23 namespaced entry points without skill
+  loading errors. Confirmed syntax includes
+  `$maister-codex:maister-development`.
+- Existing `make validate` passes. CI checks adapter tests and generated-tree
+  drift on Linux/macOS and rebuilds the Copilot variant for regression coverage.
+- Native custom roles are not assumed to be registered from a plugin. Dispatch
+  uses a native child with the full role prompt; optional TOML configurations
+  are supplied separately. Model-driven correctness is still pending.
+
+### Still required before declaring parity
+
+Every model-driven acceptance scenario in the tables above is still pending.
+In particular: live interactive gates, parallel delegation and failure recovery,
+resume/compaction, actual hook trust and interception, standards discovery,
+quick-plan approval, all full workflows, Node/browser HTML previews, Playwright
+E2E and screenshots. Installing and listing skills does not test these behaviors.
+No source capability has been deliberately removed, but preserving instruction
+coverage does not prove that the runtime will obey it.
