@@ -133,3 +133,16 @@ quick-plan approval, all full workflows, Node/browser HTML previews, Playwright
 E2E and screenshots. Installing and listing skills does not test these behaviors.
 No source capability has been deliberately removed, but preserving instruction
 coverage does not prove that the runtime will obey it.
+
+## CLI acceptance harness
+
+The current acceptance target is Codex CLI, not the desktop app. Added a bounded
+app-server client, isolated Python fixture, event evidence and independently
+tested assertions for quick-plan-gate and quick-dev-standards. The suite now has
+31 passing offline tests. Instructions and remaining scenarios are in
+`platforms/codex/tests/README.md`.
+
+The first quick-plan live attempt was **BLOCKED** because OPENAI_API_KEY was not
+available in the isolated environment. Personal ChatGPT tokens were not copied.
+Neither live scenario is verified. Interactive-terminal behavior and runtime
+hook trust remain separate, untested acceptance requirements.
