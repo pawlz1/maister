@@ -1,10 +1,202 @@
-# Maister for Codex
+# Maister for Codex CLI
 
 This variant is generated from `plugins/maister/`. Never edit generated files.
 Full functional parity is the acceptance requirement; see `docs/codex-parity.md`.
 This is currently a development port, not a verified parity release.
 
-## Build and test
+## Prerequisites
+
+- Codex CLI installed and authenticated (`codex login`). The CLI must support
+  plugins, subagents and lifecycle hooks.
+- Python 3.9 or newer, available as `python3`, for hooks and persistent task tracking.
+- Node.js 20 or newer and `npx` for HTML mockups and the bundled Playwright MCP
+  server. HTML mockups can fall back to ASCII without Node; browser E2E cannot.
+- Git for installation from a repository; `make` for rebuilding a local checkout.
+
+Installation and skill discovery have been tested with Codex CLI
+`0.162.0-alpha.17.2`. This is a tested version, not a claimed minimum version.
+If `codex plugin --help` is unavailable, use a CLI release with plugin support.
+
+Normal interactive use can use your existing Codex authentication. The isolated
+live acceptance runner currently requires `OPENAI_API_KEY`; that is a test-runner
+requirement, not an additional requirement for installing Maister.
+
+## Installation
+
+### From the development branch
+
+Run these commands in your terminal, not in the Codex chat:
+
+```bash
+codex plugin marketplace add pawlz1/maister --ref add-codex
+codex plugin add maister-codex@maister-codex-plugins
+codex plugin list --marketplace maister-codex-plugins
+```
+
+The Codex variant currently lives on `add-codex` in this development fork. Do not
+install from the default branch expecting it to contain this variant. The branch
+already contains the generated package, so this method requires no local build.
+
+### From a local checkout
+
+Clone the development branch into a directory of your choice, then run:
+
+```bash
+git clone --branch add-codex git@github.com:pawlz1/maister.git
+cd maister
+make build-codex
+make test-codex
+codex plugin marketplace add .
+codex plugin add maister-codex@maister-codex-plugins
+```
+
+The marketplace root is the repository root, not `plugins/maister-codex/`.
+
+### Review hooks and start a new session
+
+Review and trust the bundled hooks using your CLI's hook trust controls before
+running workflows. Installing/enabling the plugin does not automatically trust
+its hooks. Do not disable sandboxing or bypass hook trust as a workaround.
+
+Start Codex in the project you want to work on, not in the plugin checkout:
+
+```bash
+cd /absolute/path/to/your-project
+codex
+```
+
+Verify that the plugin is enabled in `/plugins`. Type `$` to inspect available
+skills, or use the explicit names below. Restart Codex after installing or
+refreshing the package if the skills do not appear.
+
+## Initial project setup
+
+Enter this in the Codex chat:
+
+```text
+$maister-codex:maister-init
+```
+
+The init workflow is intended to discover standards and create `.maister/docs/`,
+`.maister/tasks/` and an `AGENTS.md` documentation integration. Review its findings
+and answer its questions. To reuse another project's standards:
+
+```text
+$maister-codex:maister-init --standards-from=/absolute/path/to/other-project
+```
+
+## First workflow
+
+Use the unified entry point to classify and route a task:
+
+```text
+$maister-codex:maister-work Add a user profile page with avatar upload
+```
+
+Or select the workflow directly:
+
+```text
+$maister-codex:maister-development Add a user profile page with avatar upload
+$maister-codex:maister-development Fix login timeout --type=bug
+```
+
+These are chat instructions, not shell commands: do not paste them into a shell,
+where `$` would be interpreted as variable expansion. Claude Code's
+`/maister:development` syntax is not the Codex plugin entry point.
+
+At each mandatory gate, review the artifacts and explicitly approve, revise or
+stop. Permission to edit files does not approve workflow decisions. If structured
+questions are unavailable, the adapter asks in text and waits for your reply.
+
+## Available workflows and utilities
+
+All entries below are explicit chat skills. Arguments follow the corresponding
+Maister command; internal machinery is loaded by workflows rather than selected
+as a standalone entry point.
+
+| Skill | Use when |
+|---|---|
+| `$maister-codex:maister-work` | Classify a task or route an existing task folder |
+| `$maister-codex:maister-development` | Features, enhancements and bug fixes |
+| `$maister-codex:maister-performance` | Analyze and optimize bottlenecks |
+| `$maister-codex:maister-migration` | Plan and execute technology or data migrations |
+| `$maister-codex:maister-research` | Gather evidence, synthesize findings and design solutions |
+| `$maister-codex:maister-product-design` | Explore, converge and prototype product ideas |
+| `$maister-codex:maister-mockup-studio` | Generate mockups for a screen or feature |
+| `$maister-codex:maister-quick-plan` | Prepare a standards-aware plan before implementation |
+| `$maister-codex:maister-quick-dev` | Implement a clear, small task with standards |
+| `$maister-codex:maister-quick-bugfix` | Fix a small bug with TDD red/green verification |
+| `$maister-codex:maister-init` | Initialize project documentation and standards |
+| `$maister-codex:maister-standards-discover` | Discover conventions from the project |
+| `$maister-codex:maister-standards-update` | Add, refine or import standards |
+| `$maister-codex:maister-reviews-code` | Review quality, security and performance |
+| `$maister-codex:maister-reviews-pragmatic` | Detect over-engineering |
+| `$maister-codex:maister-reviews-spec-audit` | Audit a specification |
+| `$maister-codex:maister-reviews-reality-check` | Check whether the work solves the problem |
+| `$maister-codex:maister-reviews-production-readiness` | Assess deployment readiness |
+
+Examples:
+
+```text
+$maister-codex:maister-quick-bugfix Fix division returning a product
+$maister-codex:maister-reviews-code src/ --scope=security
+$maister-codex:maister-standards-discover --scope=quick
+$maister-codex:maister-development Add checkout --e2e --user-docs --code-review
+```
+
+## Resume and chain workflows
+
+Pass the actual task folder created by your workflow:
+
+```text
+$maister-codex:maister-development .maister/tasks/development/2026-10-11-user-profile
+$maister-codex:maister-work .maister/tasks/development/2026-10-11-user-profile
+$maister-codex:maister-development .maister/tasks/research/2026-10-11-auth-research
+$maister-codex:maister-development .maister/tasks/product-design/2026-10-11-dashboard Implement only phase 1
+```
+
+Keep `orchestrator-state.yml`, `codex-tasks.json`, the plan and work log together.
+Do not remove the task registry or manually mark a gated phase as completed to
+force progress. Start a fresh session when handing research/design to development.
+
+## Updating and uninstalling
+
+For a Git marketplace, refresh the branch snapshot:
+
+```bash
+codex plugin marketplace upgrade maister-codex-plugins
+```
+
+For a local checkout, pull the branch and run `make build-codex` and
+`make test-codex` again. To explicitly replace the cached installation after
+either method:
+
+```bash
+codex plugin remove maister-codex@maister-codex-plugins
+codex plugin add maister-codex@maister-codex-plugins
+```
+
+Restart Codex, inspect the installed plugin and review hook trust again if its
+definition changed. Rebuilding source alone does not refresh the cached package.
+To uninstall, use the remove command above; keep project `.maister/` artifacts
+unless you deliberately want to discard your workflow history.
+
+## Troubleshooting
+
+- **Marketplace/plugin not found:** check `codex plugin marketplace list`, the
+  `add-codex` branch and the exact selector `maister-codex@maister-codex-plugins`.
+- **Skill not found:** confirm the plugin is enabled, restart the session and use
+  the full `$maister-codex:maister-...` name.
+- **Hooks do not run:** check Python availability and the CLI's trust status. Do
+  not assume that a successful installation enabled the command guard.
+- **Workflow pauses:** answer the pending question explicitly; do not treat a
+  mandatory gate as a stalled process or ask the model to skip all questions.
+- **HTML/Playwright unavailable:** verify Node 20+, `npx` and the bundled MCP
+  connection. ASCII fallback does not replace browser verification.
+- **Delegation unavailable:** use a CLI configuration supporting subagents; the
+  adapter must report the missing capability rather than silently work inline.
+
+## Plugin development
 
 ```bash
 make build-codex
@@ -16,27 +208,9 @@ The existing HTML preview requires Node.js 20 or newer; ASCII fallback is retain
 Codex must support plugins, subagents and lifecycle hooks. Hook execution also
 requires explicit trust review; installing a plugin does not trust its hooks.
 
-## Local installation
+## Execution adapter
 
-The repo marketplace at `.agents/plugins/marketplace.json` exposes this variant.
-From the repository root:
-
-```bash
-codex plugin marketplace add .
-codex plugin add maister-codex@maister-codex-plugins
-```
-
-Review and trust the bundled hooks using your Codex client's hook trust controls
-before running workflows. Do not disable sandboxing or bypass hook trust as an
-installation workaround. Restart/reload Codex after refreshing the generated
-package. Installed packages are cached; rebuilding the source is not by itself
-proof that the installed copy was refreshed.
-
-Installed plugin entry points use namespaced skill syntax, for example
-`$maister-codex:maister-init`, `$maister-codex:maister-work`,
-`$maister-codex:maister-development`, `$maister-codex:maister-reviews-code` and
-`$maister-codex:maister-quick-bugfix`. Supply the same task descriptions and flags as the
-original workflows. Public workflows include their execution adapter; internal
+Public workflows include their execution adapter; internal
 skills are loaded in the parent context. Source agent roles dispatch through
 native subagents with complete role instructions; their TOML files are optional
 custom-agent configurations, not automatically registered by the plugin.

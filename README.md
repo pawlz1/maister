@@ -34,13 +34,29 @@ After installing, restart Claude Code (`/exit` and relaunch) to ensure the plugi
 
 On GitHub Copilot CLI, install the `maister-copilot` variant with `copilot plugin install` — from a registered marketplace (`copilot plugin marketplace add SkillPanel/maister`, then `copilot plugin install maister-copilot@maister-plugins`) or straight from the repository subdirectory (`copilot plugin install SkillPanel/maister:plugins/maister-copilot`). To run a local checkout instead, load it with `copilot --plugin-dir /path/to/maister/plugins/maister-copilot`; add `--add-dir` for the same path when the checkout sits outside your working directory, which grants file access to it. `--add-dir` on its own does not load a plugin. Then export `MAISTER_PLUGIN_ROOT` as the variant's [install notes](platforms/copilot-cli/README.md) describe, so HTML mockups can start their preview server.
 
-### Codex development variant
+### Codex CLI (development variant)
 
-A Codex variant is being developed with full functional parity as its acceptance
-requirement. Build it with `make build-codex` and run `make test-codex`.
-Installation and runtime requirements are in
-`platforms/codex/README.md`; validation status is in `docs/codex-parity.md`.
-It is not yet a fully verified parity release.
+A Codex CLI variant is being developed with full functional parity as its
+acceptance requirement. Install from the development fork in your terminal:
+
+```bash
+codex plugin marketplace add pawlz1/maister --ref add-codex
+codex plugin add maister-codex@maister-codex-plugins
+```
+
+Review and trust the bundled hooks, then start `codex` in your project. In the
+Codex chat, initialize and start a workflow:
+
+```text
+$maister-codex:maister-init
+$maister-codex:maister-development Add a user profile page with avatar upload
+```
+
+See the [Codex CLI installation and usage guide](platforms/codex/README.md) for
+prerequisites, local installation, workflow names, resume, updates and
+troubleshooting. [Validation status](docs/codex-parity.md) distinguishes tested
+adapters from pending live acceptance. This is not yet a fully verified parity
+release; desktop support is outside the current test scope.
 
 ### Initial project setup
 
