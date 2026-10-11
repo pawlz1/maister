@@ -60,7 +60,7 @@ def translate(text):
                   text, flags=re.M)
     text = text.replace('Skills always use Skill tool; agents always use Task tool.',
                         'Skills load in the parent context; agents run as isolated subagents.')
-    return text
+    return text.rstrip() + '\n'
 
 
 def write_json(path, value):
