@@ -1,0 +1,12 @@
+{
+  "name": "maister-codex",
+  "version": "2.2.6",
+  "description": "Structured, standards-aware development workflows for Codex",
+  "author": {
+    "name": "Skillpanel",
+    "email": "marek@skillpanel.com"
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/hooks.json"
+}
